@@ -1,0 +1,4879 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font:
+          14px -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #fff;
+        color: #000;
+      }
+      img {
+        max-width: 100%;
+      }
+      [hidden]:not([hidden="until-found" i]) {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <title>Sorting &amp; Binary Search</title>
+    <meta name="claude:viewport-fit-sides" content="cover" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      document.documentElement.lang = "ar";
+      document.documentElement.dir = "rtl";
+    </script>
+    <style>
+      /* Layout: one idea per full-screen slide, fixed footer for navigation + section chips; arrays and code read left-to-right inside an RTL deck */
+      :root {
+        color-scheme: dark;
+        --bg: #0b0d17;
+        --bg2: #121527;
+        --panel: #161a30;
+        --panel2: #1b2040;
+        --code: #080a14;
+        --cellbg: #1a1f3d;
+        --ink: #f3f1ea;
+        --muted: #a3a8c3;
+        --faint: #6f7496;
+        --line: rgba(255, 255, 255, 0.09);
+        --amber: #ffb547;
+        --mint: #45e3b2;
+        --violet: #a08cff;
+        --coral: #ff6b7f;
+        --sky: #6cc8ff;
+        --r-newbie: #a2a2a2;
+        --r-pupil: #43c45a;
+        --r-specialist: #2fc6b8;
+        --r-expert: #5c8dff;
+        --r-cm: #c96bd9;
+        --r-master: #ffa040;
+        --r-gm: #ff5b5b;
+        --font:
+          "IBM Plex Sans Arabic", "Segoe UI", Tahoma, "Noto Sans Arabic", Arial,
+          sans-serif;
+        --mono:
+          "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
+          monospace;
+        --cw: clamp(38px, 4.3vw, 58px);
+        --footer: 60px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        font-family: var(--font);
+        color: var(--ink);
+        background-color: var(--bg);
+        background-image:
+          radial-gradient(
+            1200px 600px at 85% -10%,
+            rgba(160, 140, 255, 0.13),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 500px at 0% 110%,
+            rgba(69, 227, 178, 0.09),
+            transparent 60%
+          ),
+          linear-gradient(160deg, var(--bg), var(--bg2));
+      }
+      body:before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.35;
+        background-image: radial-gradient(
+          rgba(255, 255, 255, 0.07) 1px,
+          transparent 1.2px
+        );
+        background-size: 26px 26px;
+      }
+      .deck {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+      }
+      .slide {
+        position: absolute;
+        inset: 0;
+        display: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+        scrollbar-width: none;
+        align-items: center;
+        justify-content: center;
+        padding-block: clamp(22px, 4vw, 56px)
+          calc(var(--footer) + 18px + env(safe-area-inset-bottom, 0px));
+        padding-left: max(
+          clamp(16px, 5.5vw, 84px),
+          env(safe-area-inset-left, 0px)
+        );
+        padding-right: max(
+          clamp(16px, 5.5vw, 84px),
+          env(safe-area-inset-right, 0px)
+        );
+      }
+      .slide::-webkit-scrollbar {
+        display: none;
+      }
+      .slide.active {
+        display: flex;
+        animation: enter 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      @keyframes enter {
+        from {
+          opacity: 0;
+          transform: translateY(14px) scale(0.99);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .content {
+        width: min(1180px, 100%);
+        margin: auto;
+        min-width: 0;
+      }
+      .reveal-item {
+        opacity: 0;
+        transform: translateY(18px);
+        transition:
+          opacity 0.45s ease,
+          transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .reveal-item.revealed {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* type */
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--amber);
+        margin-bottom: 12px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 181, 71, 0.08);
+        border: 1px solid rgba(255, 181, 71, 0.2);
+      }
+      .kicker.mint {
+        color: var(--mint);
+        background: rgba(69, 227, 178, 0.08);
+        border-color: rgba(69, 227, 178, 0.22);
+      }
+      .kicker.violet {
+        color: var(--violet);
+        background: rgba(160, 140, 255, 0.09);
+        border-color: rgba(160, 140, 255, 0.24);
+      }
+      .kicker.coral {
+        color: var(--coral);
+        background: rgba(255, 107, 127, 0.08);
+        border-color: rgba(255, 107, 127, 0.22);
+      }
+      .kicker.sky {
+        color: var(--sky);
+        background: rgba(108, 200, 255, 0.08);
+        border-color: rgba(108, 200, 255, 0.24);
+      }
+      h1 {
+        font-size: clamp(44px, 6.4vw, 86px);
+        line-height: 1.04;
+        margin: 0 0 16px;
+        font-weight: 700;
+        text-wrap: balance;
+      }
+      h2 {
+        font-size: clamp(28px, 4vw, 52px);
+        line-height: 1.18;
+        margin: 0 0 18px;
+        font-weight: 700;
+        text-wrap: balance;
+      }
+      .compact h2 {
+        font-size: clamp(24px, 3vw, 38px);
+        margin-bottom: 12px;
+      }
+      h3 {
+        font-size: clamp(18px, 1.9vw, 24px);
+        margin: 0 0 8px;
+        font-weight: 700;
+        text-wrap: balance;
+      }
+      p {
+        font-size: clamp(16px, 1.75vw, 21px);
+        line-height: 1.75;
+        color: var(--muted);
+        margin: 0 0 12px;
+      }
+      b {
+        color: var(--ink);
+      }
+      .amber {
+        color: var(--amber);
+      }
+      .mint {
+        color: var(--mint);
+      }
+      .violet {
+        color: var(--violet);
+      }
+      .coral {
+        color: var(--coral);
+      }
+      .sky {
+        color: var(--sky);
+      }
+      .f {
+        font-family: var(--mono);
+        direction: ltr;
+        unicode-bidi: isolate;
+        white-space: nowrap;
+        font-size: 0.92em;
+        color: var(--ink);
+      }
+      .badge {
+        display: inline-block;
+        direction: ltr;
+        unicode-bidi: isolate;
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(69, 227, 178, 0.12);
+        color: var(--mint);
+        border: 1px solid rgba(69, 227, 178, 0.3);
+        vertical-align: middle;
+        margin-inline-start: 8px;
+        white-space: nowrap;
+      }
+      .badge.amber {
+        background: rgba(255, 181, 71, 0.12);
+        color: var(--amber);
+        border-color: rgba(255, 181, 71, 0.3);
+      }
+      .badge.coral {
+        background: rgba(255, 107, 127, 0.12);
+        color: var(--coral);
+        border-color: rgba(255, 107, 127, 0.3);
+      }
+
+      /* layout */
+      .grid2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .card {
+        position: relative;
+        background: linear-gradient(
+          180deg,
+          rgba(27, 32, 64, 0.92),
+          rgba(22, 26, 48, 0.92)
+        );
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 20px;
+        overflow: hidden;
+        min-width: 0;
+      }
+      .card:after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0 0;
+        height: 3px;
+        background: var(--accent, var(--amber));
+        opacity: 0.85;
+      }
+      .card p {
+        font-size: 16px;
+        margin: 0;
+        line-height: 1.7;
+      }
+      .card .ic {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-family: var(--mono);
+        font-size: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--accent, var(--amber));
+        margin-bottom: 12px;
+        border: 1px solid var(--line);
+      }
+      .c-mint {
+        --accent: var(--mint);
+      }
+      .c-violet {
+        --accent: var(--violet);
+      }
+      .c-coral {
+        --accent: var(--coral);
+      }
+      .c-sky {
+        --accent: var(--sky);
+      }
+      .callout {
+        margin-top: 18px;
+        padding: 14px 18px;
+        border-inline-start: 4px solid var(--amber);
+        background: rgba(255, 181, 71, 0.07);
+        border-radius: 12px;
+        color: #eeeadf;
+        font-size: clamp(16px, 1.6vw, 18px);
+        line-height: 1.75;
+      }
+      .callout.mint {
+        border-color: var(--mint);
+        background: rgba(69, 227, 178, 0.07);
+      }
+      .callout.coral {
+        border-color: var(--coral);
+        background: rgba(255, 107, 127, 0.07);
+      }
+      .callout.violet {
+        border-color: var(--violet);
+        background: rgba(160, 140, 255, 0.08);
+      }
+      .callout.sky {
+        border-color: var(--sky);
+        background: rgba(108, 200, 255, 0.07);
+      }
+
+      /* steps */
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .step {
+        position: relative;
+        padding: 15px 16px 17px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(22, 26, 48, 0.8);
+        min-width: 0;
+      }
+      .step .n {
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--amber);
+        letter-spacing: 0.8px;
+        margin-bottom: 6px;
+      }
+      .step h3 {
+        font-size: 18px;
+      }
+      .step p {
+        font-size: 15px;
+        margin: 0;
+        line-height: 1.7;
+      }
+      .step.key {
+        border-color: rgba(69, 227, 178, 0.45);
+        background: rgba(69, 227, 178, 0.06);
+      }
+      .step.key .n {
+        color: var(--mint);
+      }
+
+      /* statement */
+      .stmt {
+        background: #0a0c18;
+        border: 1px solid rgba(160, 140, 255, 0.28);
+        border-radius: 18px;
+        padding: 18px 22px;
+        position: relative;
+      }
+      .stmt p {
+        color: #e9e6f7;
+        font-size: clamp(16px, 1.6vw, 19px);
+        margin: 0 0 6px;
+        padding-left: 70px;
+      }
+      .stmt .io {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .stmt .io span {
+        font-family: var(--mono);
+        direction: ltr;
+        unicode-bidi: isolate;
+        font-size: 14px;
+        padding: 6px 10px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--line);
+        color: #dcd8f0;
+      }
+      .cf {
+        position: absolute;
+        top: 14px;
+        left: 16px;
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--sky);
+        text-decoration: none;
+        border: 1px solid rgba(108, 200, 255, 0.3);
+        padding: 4px 10px;
+        border-radius: 999px;
+      }
+      .cf:hover {
+        background: rgba(108, 200, 255, 0.12);
+      }
+
+      /* code */
+      pre.code,
+      .codepanel {
+        margin: 0;
+        background: var(--code);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px 18px;
+        font-family: var(--mono);
+        direction: ltr;
+        text-align: left;
+        font-size: clamp(12.5px, 1.15vw, 16px);
+        line-height: 1.7;
+        color: #e6e3f5;
+        overflow: auto;
+        white-space: pre;
+        min-width: 0;
+      }
+      .tk-k {
+        color: #c792ea;
+      }
+      .tk-t {
+        color: var(--sky);
+      }
+      .tk-n {
+        color: var(--amber);
+      }
+      .tk-s {
+        color: var(--mint);
+      }
+      .tk-c {
+        color: #6c7293;
+        font-style: italic;
+      }
+      .tk-f {
+        color: #82aaff;
+      }
+      .codepanel {
+        padding: 10px 0;
+        white-space: normal;
+      }
+      .codepanel .cl {
+        display: flex;
+        white-space: pre;
+        padding: 0 14px 0 0;
+        border-left: 3px solid transparent;
+        transition:
+          background 0.25s,
+          border-color 0.25s;
+      }
+      .codepanel .cl .ln {
+        width: 32px;
+        flex: none;
+        text-align: right;
+        padding-right: 12px;
+        color: #4b5072;
+        user-select: none;
+      }
+      .codepanel .cl.on {
+        background: rgba(255, 181, 71, 0.13);
+        border-left-color: var(--amber);
+      }
+      .codepanel .cl.on .ln {
+        color: var(--amber);
+      }
+
+      /* visualizer */
+      .viz {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        gap: 14px;
+        margin-top: 4px;
+      }
+      .viz-stage {
+        grid-column: 1/-1;
+        direction: ltr;
+        background: rgba(10, 12, 24, 0.65);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px 18px 10px;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      .viz-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: max-content;
+      }
+      .vrow {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        transition: opacity 0.35s;
+      }
+      .vrow.off {
+        opacity: 0;
+      }
+      .vrow.has-ptr {
+        padding-bottom: 36px;
+      }
+      .vrow.has-top {
+        padding-top: 34px;
+      }
+      .vlabel {
+        width: 60px;
+        flex: none;
+        height: var(--cw);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        font-family: var(--mono);
+        font-weight: 700;
+        color: var(--muted);
+        font-size: 14px;
+        white-space: nowrap;
+      }
+      .vcells {
+        position: relative;
+        flex: none;
+        height: var(--cw);
+      }
+      .vrow.idx .vlabel,
+      .vrow.idx .vcells {
+        height: 22px;
+      }
+      .cell {
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 1;
+        width: var(--cw);
+        height: var(--cw);
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+        font-weight: 700;
+        font-size: clamp(15px, 1.55vw, 21px);
+        background: var(--cellbg);
+        border: 1.5px solid rgba(255, 255, 255, 0.12);
+        color: #fff;
+        transition:
+          translate 0.65s cubic-bezier(0.45, 0.05, 0.2, 1),
+          background 0.35s,
+          border-color 0.35s,
+          color 0.35s,
+          opacity 0.35s,
+          box-shadow 0.35s;
+      }
+      .vrow.idx .cell {
+        height: 22px;
+        background: none;
+        border: none;
+        color: var(--faint);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .cell.empty {
+        background: rgba(255, 255, 255, 0.02);
+        border-style: dashed;
+        color: transparent;
+      }
+      .cell.q {
+        background: rgba(255, 255, 255, 0.02);
+        border-style: dashed;
+        color: var(--faint);
+      }
+      .cell.dim {
+        opacity: 0.32;
+      }
+      .cell.hl {
+        background: rgba(255, 181, 71, 0.2);
+        border-color: var(--amber);
+      }
+      .cell.src {
+        background: rgba(160, 140, 255, 0.2);
+        border-color: var(--violet);
+      }
+      .cell.ok {
+        background: rgba(69, 227, 178, 0.26);
+        border-color: var(--mint);
+        color: #eafff7;
+      }
+      .cell.bad {
+        background: rgba(255, 107, 127, 0.2);
+        border-color: var(--coral);
+        color: #ffd9de;
+      }
+      .cell.okg {
+        background: rgba(69, 227, 178, 0.07);
+        border-color: rgba(69, 227, 178, 0.35);
+        color: rgba(234, 255, 247, 0.5);
+      }
+      .cell.badg {
+        background: rgba(255, 107, 127, 0.06);
+        border-color: rgba(255, 107, 127, 0.32);
+        color: rgba(255, 217, 222, 0.45);
+      }
+      .cell.g1 {
+        background: rgba(69, 227, 178, 0.26);
+        border-color: var(--mint);
+      }
+      .cell.g2 {
+        background: rgba(160, 140, 255, 0.28);
+        border-color: var(--violet);
+      }
+      .cell.g3 {
+        background: rgba(108, 200, 255, 0.24);
+        border-color: var(--sky);
+      }
+      .cell.pop {
+        animation: pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+      }
+      @keyframes pop {
+        0% {
+          scale: 0.6;
+        }
+        100% {
+          scale: 1;
+        }
+      }
+      .vwin {
+        position: absolute;
+        z-index: 0;
+        top: -6px;
+        height: calc(100% + 12px);
+        border: 2.5px solid var(--amber);
+        border-radius: 15px;
+        background: rgba(255, 181, 71, 0.06);
+        box-shadow: 0 0 22px rgba(255, 181, 71, 0.22);
+        transition:
+          left 0.5s cubic-bezier(0.3, 0.8, 0.3, 1),
+          width 0.5s cubic-bezier(0.3, 0.8, 0.3, 1),
+          opacity 0.3s,
+          border-color 0.3s;
+        pointer-events: none;
+      }
+      .vwin.mint {
+        border-color: var(--mint);
+        background: rgba(69, 227, 178, 0.06);
+        box-shadow: 0 0 22px rgba(69, 227, 178, 0.22);
+      }
+      .vwin.coral {
+        border-color: var(--coral);
+        background: rgba(255, 107, 127, 0.06);
+        box-shadow: 0 0 22px rgba(255, 107, 127, 0.22);
+      }
+      .vptr {
+        position: absolute;
+        z-index: 2;
+        top: calc(100% + 4px);
+        translate: -50% 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition:
+          left 0.5s cubic-bezier(0.3, 0.8, 0.3, 1),
+          opacity 0.3s;
+        font-family: var(--mono);
+        font-weight: 700;
+        font-size: 13.5px;
+        color: var(--c, var(--amber));
+        pointer-events: none;
+      }
+      .vptr:before {
+        content: "";
+        width: 0;
+        height: 0;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-bottom: 9px solid var(--c, var(--amber));
+      }
+      .vptr span {
+        margin-top: 2px;
+        padding: 1px 7px;
+        border-radius: 7px;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--c, var(--amber));
+        white-space: nowrap;
+      }
+      .vptr.top {
+        top: auto;
+        bottom: calc(100% + 4px);
+        flex-direction: column-reverse;
+      }
+      .vptr.top:before {
+        border-bottom: none;
+        border-top: 9px solid var(--c, var(--amber));
+      }
+      .vptr.top span {
+        margin: 0 0 2px;
+      }
+      .viz.snap .cell,
+      .viz.snap .vptr,
+      .viz.snap .vwin {
+        transition: none !important;
+      }
+      .viz-info {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+      }
+      .viz-cap {
+        background: rgba(22, 26, 48, 0.85);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 16px;
+        font-size: clamp(15.5px, 1.55vw, 18.5px);
+        line-height: 1.8;
+        min-height: 96px;
+        color: #efecf9;
+      }
+      .viz-cap b {
+        color: var(--amber);
+      }
+      .viz-vars {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        direction: ltr;
+        justify-content: flex-end;
+        min-height: 36px;
+      }
+      .var {
+        font-family: var(--mono);
+        font-size: 15px;
+        padding: 6px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--line);
+        color: var(--muted);
+      }
+      .var b {
+        color: #fff;
+        margin-left: 6px;
+      }
+      .var.flash {
+        background: rgba(69, 227, 178, 0.14);
+        border-color: rgba(69, 227, 178, 0.5);
+      }
+      .var.flash b {
+        color: var(--mint);
+      }
+      .viz-ctrl {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        direction: ltr;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+      .viz-ctrl button {
+        padding: 6px 11px;
+        font-size: 14px;
+      }
+      .viz-ctrl .play.on {
+        background: rgba(69, 227, 178, 0.18);
+        border-color: var(--mint);
+        color: var(--mint);
+      }
+      .viz-step {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--muted);
+        margin-right: auto;
+      }
+      .viz .codepanel {
+        align-self: start;
+      }
+
+      /* hero */
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 48px;
+        align-items: center;
+      }
+      .lead {
+        font-size: clamp(18px, 2vw, 24px);
+        color: #dcd9ec;
+      }
+      .hero-vis {
+        position: relative;
+        padding: 30px 24px 22px;
+        border-radius: 24px;
+        border: 1px solid var(--line);
+        background: rgba(16, 19, 38, 0.82);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+      }
+      .hv {
+        direction: ltr;
+        width: 512px;
+        margin: 0 auto;
+      }
+      .hv-row {
+        position: relative;
+        display: flex;
+        gap: 8px;
+        height: 44px;
+      }
+      .hc {
+        position: relative;
+        z-index: 1;
+        width: 44px;
+        height: 44px;
+        flex: none;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+        font-weight: 700;
+        font-size: 16px;
+        background: var(--cellbg);
+        border: 1.5px solid rgba(255, 255, 255, 0.12);
+        color: #fff;
+      }
+      .hv-box {
+        position: absolute;
+        z-index: 0;
+        top: -6px;
+        height: 56px;
+        border: 2.5px solid var(--amber);
+        border-radius: 14px;
+        box-shadow: 0 0 24px rgba(255, 181, 71, 0.3);
+        animation: hvbox 9s infinite;
+      }
+      @keyframes hvbox {
+        0%,
+        22% {
+          left: -5px;
+          width: 522px;
+          border-color: var(--amber);
+        }
+        26%,
+        48% {
+          left: 255px;
+          width: 262px;
+          border-color: var(--amber);
+        }
+        52%,
+        74% {
+          left: 255px;
+          width: 106px;
+          border-color: var(--amber);
+        }
+        78%,
+        100% {
+          left: 255px;
+          width: 54px;
+          border-color: var(--mint);
+        }
+      }
+      .hv-mid {
+        position: absolute;
+        top: 56px;
+        z-index: 2;
+        translate: -50% 0;
+        font-family: var(--mono);
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--amber);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        animation: hvmid 9s infinite;
+      }
+      .hv-mid:before {
+        content: "";
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-bottom: 9px solid currentColor;
+      }
+      @keyframes hvmid {
+        0%,
+        22% {
+          left: 230px;
+          color: var(--amber);
+        }
+        26%,
+        48% {
+          left: 386px;
+          color: var(--amber);
+        }
+        52%,
+        74% {
+          left: 282px;
+          color: var(--amber);
+        }
+        78%,
+        100% {
+          left: 282px;
+          color: var(--mint);
+        }
+      }
+      .hc.d1 {
+        animation: hvd1 9s infinite;
+      }
+      .hc.d2 {
+        animation: hvd2 9s infinite;
+      }
+      .hc.d3 {
+        animation: hvd3 9s infinite;
+      }
+      .hc.hit {
+        animation: hvhit 9s infinite;
+      }
+      @keyframes hvd1 {
+        0%,
+        22% {
+          opacity: 1;
+        }
+        26%,
+        100% {
+          opacity: 0.28;
+        }
+      }
+      @keyframes hvd2 {
+        0%,
+        48% {
+          opacity: 1;
+        }
+        52%,
+        100% {
+          opacity: 0.28;
+        }
+      }
+      @keyframes hvd3 {
+        0%,
+        74% {
+          opacity: 1;
+        }
+        78%,
+        100% {
+          opacity: 0.28;
+        }
+      }
+      @keyframes hvhit {
+        0%,
+        74% {
+          background: var(--cellbg);
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+        78%,
+        100% {
+          background: rgba(69, 227, 178, 0.3);
+          border-color: var(--mint);
+        }
+      }
+      .hv-cap {
+        margin-top: 46px;
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .hv-cap b {
+        color: var(--mint);
+      }
+
+      /* roadmap */
+      .roadmap {
+        display: grid;
+        gap: 11px;
+      }
+      .phase {
+        display: grid;
+        grid-template-columns: 130px minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        padding: 14px 18px;
+        border-radius: 16px;
+        background: rgba(22, 26, 48, 0.8);
+        border: 1px solid var(--line);
+      }
+      .phase .t {
+        font-family: var(--mono);
+        font-weight: 700;
+        color: var(--amber);
+        text-align: center;
+        padding: 8px;
+        border-radius: 10px;
+        background: rgba(255, 181, 71, 0.08);
+      }
+      .phase p {
+        margin: 0;
+        font-size: 17px;
+      }
+      .phase .chip {
+        font-size: 13px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      /* flow */
+      .flow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        margin-top: 18px;
+      }
+      .node {
+        padding: 12px 16px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(22, 26, 48, 0.9);
+        font-weight: 700;
+        text-align: center;
+        min-width: 130px;
+      }
+      .node small {
+        display: block;
+        font-weight: 400;
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 3px;
+      }
+      .arrow {
+        color: var(--amber);
+        font-size: 22px;
+      }
+
+      /* tables */
+      .tbl-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(22, 26, 48, 0.7);
+      }
+      .tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: clamp(14.5px, 1.45vw, 17px);
+      }
+      .tbl th {
+        font-size: 13.5px;
+        color: var(--faint);
+        font-weight: 600;
+        text-align: start;
+        padding: 11px 16px;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      .tbl td {
+        padding: 11px 16px;
+        border-bottom: 1px solid var(--line);
+        color: #e7e4f3;
+        font-variant-numeric: tabular-nums;
+      }
+      .tbl tr:last-child td {
+        border-bottom: none;
+      }
+      .tbl tr.hot td:first-child b {
+        color: var(--mint);
+      }
+      .tbl td.num {
+        font-family: var(--mono);
+        direction: ltr;
+        text-align: right;
+      }
+
+      /* guess game */
+      .guess-wrap {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+      }
+      .guess {
+        background: rgba(10, 12, 24, 0.7);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px 20px;
+        cursor: default;
+      }
+      .g-top {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .g-label {
+        color: var(--muted);
+        font-size: 16px;
+      }
+      .g-num {
+        font-family: var(--mono);
+        font-weight: 700;
+        font-size: clamp(40px, 5vw, 64px);
+        color: var(--amber);
+        line-height: 1;
+        min-width: 2.2ch;
+        text-align: center;
+      }
+      .g-meta {
+        color: var(--muted);
+        font-size: 15px;
+      }
+      .g-track {
+        position: relative;
+        height: 30px;
+        margin: 18px 0 6px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--line);
+      }
+      .g-range {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        border-radius: 8px;
+        background: rgba(255, 181, 71, 0.2);
+        border: 1.5px solid var(--amber);
+        transition:
+          left 0.45s cubic-bezier(0.3, 0.8, 0.3, 1),
+          width 0.45s cubic-bezier(0.3, 0.8, 0.3, 1);
+      }
+      .g-mark {
+        position: absolute;
+        top: -6px;
+        bottom: -6px;
+        width: 3px;
+        margin-left: -1.5px;
+        border-radius: 2px;
+        background: var(--mint);
+        transition: left 0.45s cubic-bezier(0.3, 0.8, 0.3, 1);
+      }
+      .g-ticks {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--faint);
+        direction: ltr;
+      }
+      .g-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .g-btns button {
+        font-size: 16px;
+        padding: 9px 14px;
+      }
+      .g-btns .ok {
+        border-color: rgba(69, 227, 178, 0.45);
+        color: var(--mint);
+      }
+      .g-hist {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+        min-height: 30px;
+        direction: ltr;
+      }
+      .g-hist span {
+        font-family: var(--mono);
+        font-size: 13px;
+        padding: 4px 8px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        color: var(--muted);
+      }
+      .g-hist .ok {
+        color: var(--mint);
+        border-color: rgba(69, 227, 178, 0.4);
+      }
+      .g-msg {
+        min-height: 26px;
+        margin-top: 6px;
+        font-size: 16px;
+        color: var(--mint);
+      }
+      .tbl-note {
+        font-size: 14px;
+        color: var(--faint);
+        margin: 8px 0 0;
+      }
+
+      /* strip (978C) */
+      .strip {
+        position: relative;
+        display: flex;
+        gap: 4px;
+        margin: 14px 0 4px;
+        padding-top: 40px;
+      }
+      .seg {
+        border-radius: 10px;
+        padding: 8px 10px;
+        min-width: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        border: 1px solid var(--line);
+      }
+      .seg b {
+        font-family: var(--font);
+        font-size: 15px;
+      }
+      .seg span {
+        font-family: var(--mono);
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .seg.s1 {
+        background: rgba(108, 200, 255, 0.12);
+      }
+      .seg.s2 {
+        background: rgba(255, 181, 71, 0.16);
+        border-color: rgba(255, 181, 71, 0.45);
+      }
+      .seg.s3 {
+        background: rgba(160, 140, 255, 0.14);
+      }
+      .pin {
+        position: absolute;
+        top: 0;
+        bottom: -6px;
+        width: 2px;
+        background: var(--mint);
+      }
+      .pin span {
+        position: absolute;
+        top: 0;
+        left: 8px;
+        white-space: nowrap;
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--mint);
+        background: rgba(10, 12, 24, 0.9);
+        padding: 2px 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(69, 227, 178, 0.4);
+      }
+      .strip-note {
+        font-size: 15px;
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+      .seg b {
+        direction: rtl;
+      }
+
+      /* answer-search concept */
+      .ans-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+        gap: 18px;
+        align-items: start;
+      }
+      .steps.v {
+        grid-template-columns: 1fr;
+        margin-top: 0;
+        gap: 10px;
+      }
+      .steps.v .step {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        column-gap: 10px;
+        padding: 12px 14px;
+      }
+      .steps.v .step .n {
+        grid-row: span 2;
+        font-size: 15px;
+        margin: 2px 0 0;
+      }
+      .steps.v .step h3 {
+        font-size: 17px;
+        margin-bottom: 2px;
+      }
+      .tf {
+        direction: ltr;
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+        position: relative;
+        padding-bottom: 30px;
+      }
+      .tf i {
+        font-style: normal;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+        font-weight: 700;
+        border: 1.5px solid;
+      }
+      .tf .t {
+        background: rgba(69, 227, 178, 0.2);
+        border-color: var(--mint);
+        color: #eafff7;
+      }
+      .tf .x {
+        background: rgba(255, 107, 127, 0.16);
+        border-color: var(--coral);
+        color: #ffd9de;
+      }
+      .tf .mk {
+        position: absolute;
+        bottom: 0;
+        left: 204px;
+        translate: -50% 0;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--mint);
+        white-space: nowrap;
+        direction: rtl;
+      }
+      .tf .mk:before {
+        content: "▲ ";
+      }
+
+      /* contests */
+      .pen-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+      }
+      .formula {
+        font-size: clamp(16px, 1.6vw, 19px);
+        color: #e7e4f3;
+        background: rgba(255, 107, 127, 0.07);
+        border: 1px solid rgba(255, 107, 127, 0.3);
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin: 0 0 12px;
+      }
+      .formula small {
+        display: block;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .pen {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        background: rgba(22, 26, 48, 0.75);
+      }
+      .pen-row {
+        display: grid;
+        grid-template-columns: 0.7fr 1.1fr 1fr 1.3fr;
+        gap: 8px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+        font-size: 16px;
+        align-items: center;
+        font-variant-numeric: tabular-nums;
+      }
+      .pen-row:last-child {
+        border-bottom: none;
+      }
+      .pen-row.head {
+        font-size: 13px;
+        color: var(--faint);
+        font-weight: 600;
+      }
+      .pen-row .v {
+        font-family: var(--mono);
+        direction: ltr;
+        text-align: right;
+        white-space: nowrap;
+      }
+      .pen-row.miss {
+        color: var(--faint);
+      }
+      .pen-row.total {
+        background: rgba(255, 107, 127, 0.08);
+        font-weight: 700;
+      }
+      .pen-row.total .v {
+        color: var(--coral);
+      }
+      .side {
+        display: grid;
+        gap: 12px;
+      }
+      .side .card {
+        padding: 14px 16px;
+      }
+      .side .card h3 {
+        font-size: 17px;
+      }
+      .side .card p {
+        font-size: 15px;
+      }
+      .pts-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+      }
+      .chart {
+        margin: 0;
+        background: rgba(10, 12, 24, 0.6);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 10px 12px;
+      }
+      .chart svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        direction: ltr;
+        font-family: var(--mono);
+      }
+      .chart figcaption {
+        font-size: 13.5px;
+        color: var(--faint);
+        padding: 2px 4px 2px;
+      }
+      .chart .grid line {
+        stroke: rgba(255, 255, 255, 0.08);
+      }
+      .chart .axis {
+        fill: var(--faint);
+        font-size: 12px;
+      }
+      .chart .lbl {
+        font-family: var(--font);
+        font-size: 13px;
+      }
+      .chart .draw {
+        stroke-dasharray: 1;
+        stroke-dashoffset: 1;
+        transition: stroke-dashoffset 1.6s cubic-bezier(0.3, 0.7, 0.2, 1);
+      }
+      .revealed .draw {
+        stroke-dashoffset: 0;
+      }
+      .chart .bar {
+        transform-box: fill-box;
+        transform-origin: 50% 100%;
+        transform: scaleY(0);
+        transition: transform 0.8s cubic-bezier(0.3, 0.8, 0.2, 1);
+      }
+      .revealed .bar {
+        transform: scaleY(1);
+      }
+      .revealed .bar:nth-of-type(2) {
+        transition-delay: 0.12s;
+      }
+      .revealed .bar:nth-of-type(3) {
+        transition-delay: 0.24s;
+      }
+      .revealed .bar:nth-of-type(4) {
+        transition-delay: 0.36s;
+      }
+      .revealed .bar:nth-of-type(5) {
+        transition-delay: 0.48s;
+      }
+      .revealed .bar:nth-of-type(6) {
+        transition-delay: 0.6s;
+      }
+      .facts {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 9px;
+      }
+      .facts li {
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(22, 26, 48, 0.75);
+        font-size: clamp(15px, 1.45vw, 17px);
+        line-height: 1.7;
+        color: #e3e0ef;
+      }
+      .rating-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        gap: 20px;
+        align-items: start;
+      }
+      .small {
+        font-size: 15px;
+        line-height: 1.75;
+      }
+      .ranks {
+        display: grid;
+        gap: 5px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 12px;
+        background: rgba(22, 26, 48, 0.7);
+      }
+      .rk {
+        display: grid;
+        grid-template-columns: 12px minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+        padding: 5px 8px;
+        border-radius: 9px;
+        font-size: 15px;
+      }
+      .rk i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--rc);
+      }
+      .rk b {
+        color: var(--rc);
+        font-weight: 600;
+        direction: ltr;
+        text-align: start;
+      }
+      .rk span {
+        font-family: var(--mono);
+        font-size: 13.5px;
+        color: var(--muted);
+        direction: ltr;
+      }
+      .rk.you {
+        background: rgba(255, 255, 255, 0.05);
+        outline: 1px dashed rgba(255, 255, 255, 0.18);
+      }
+      .strat-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+      }
+      .tips {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: tip;
+        display: grid;
+        gap: 9px;
+      }
+      .tips li {
+        counter-increment: tip;
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(22, 26, 48, 0.75);
+        font-size: clamp(15px, 1.45vw, 17px);
+        line-height: 1.7;
+        color: #d9d6e8;
+      }
+      .tips li:before {
+        content: counter(tip);
+        font-family: var(--mono);
+        font-weight: 700;
+        color: var(--coral);
+        font-size: 15px;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 107, 127, 0.1);
+        border: 1px solid rgba(255, 107, 127, 0.3);
+      }
+      .tmpl-h {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--mint);
+        margin: 0 0 8px;
+      }
+
+      /* quiz / sheet / homework */
+      .quiz .q {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .quiz .q p {
+        color: #ece9f6;
+        font-size: 16.5px;
+      }
+      .quiz .ans {
+        margin-top: auto;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: rgba(69, 227, 178, 0.1);
+        border: 1px dashed rgba(69, 227, 178, 0.45);
+        color: var(--mint);
+        font-weight: 700;
+        font-size: 16px;
+      }
+      .sheet .card h3 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .sheet .tag {
+        font-family: var(--mono);
+        font-size: 13px;
+        direction: ltr;
+        padding: 3px 8px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .sheet pre.code {
+        margin-top: 10px;
+        font-size: clamp(12.5px, 1.1vw, 15px);
+      }
+      .stl {
+        margin-top: 14px;
+      }
+      .stl td:first-child {
+        font-family: var(--mono);
+        direction: ltr;
+        text-align: left;
+        color: #82aaff;
+        white-space: nowrap;
+      }
+      .hw {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .hw .card {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .hw .badge {
+        align-self: flex-start;
+        margin: 0;
+      }
+      .hw .card h3 {
+        font-size: 20px;
+        margin: 0;
+      }
+      .hw .hint {
+        font-size: 15.5px;
+        color: var(--muted);
+        line-height: 1.75;
+        margin: 0;
+      }
+      .hw a.go {
+        margin-top: auto;
+        align-self: flex-start;
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--sky);
+        text-decoration: none;
+        border: 1px solid rgba(108, 200, 255, 0.35);
+        padding: 6px 12px;
+        border-radius: 999px;
+      }
+      .hw a.go:hover {
+        background: rgba(108, 200, 255, 0.12);
+      }
+      .center {
+        text-align: center;
+        max-width: 900px;
+      }
+
+      /* controls & footer */
+      button {
+        border: 1px solid var(--line);
+        background: rgba(27, 32, 64, 0.9);
+        color: var(--ink);
+        border-radius: 10px;
+        padding: 8px 13px;
+        font: inherit;
+        font-size: 15px;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
+      }
+      button:hover {
+        background: rgba(255, 181, 71, 0.12);
+        border-color: rgba(255, 181, 71, 0.4);
+      }
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--amber);
+        outline-offset: 2px;
+      }
+      .footer {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        min-height: var(--footer);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-left: max(16px, env(safe-area-inset-left, 0px));
+        padding-right: max(16px, env(safe-area-inset-right, 0px));
+        background: rgba(8, 9, 18, 0.9);
+        backdrop-filter: blur(14px);
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      .progress {
+        position: absolute;
+        top: -2px;
+        right: 0;
+        height: 3px;
+        width: 0;
+        background: linear-gradient(270deg, var(--amber), var(--mint));
+        transition: width 0.3s;
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .counter {
+        direction: ltr;
+        font-family: var(--mono);
+        color: var(--muted);
+        font-size: 13px;
+        min-width: 62px;
+        text-align: center;
+      }
+      .sections {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .sections button {
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 5px 11px;
+        border-radius: 999px;
+        color: var(--faint);
+        border: 1px solid transparent;
+        background: none;
+      }
+      .sections button:hover {
+        color: var(--ink);
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .sections button.on {
+        color: var(--amber);
+        border-color: rgba(255, 181, 71, 0.35);
+        background: rgba(255, 181, 71, 0.08);
+      }
+      .sections button.done {
+        color: var(--muted);
+      }
+      .tools {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .study[aria-pressed="true"] {
+        color: var(--mint);
+        border-color: rgba(69, 227, 178, 0.5);
+        background: rgba(69, 227, 178, 0.1);
+      }
+
+      @media (max-width: 1020px) {
+        .hero,
+        .grid2,
+        .grid3,
+        .grid4,
+        .viz,
+        .hw,
+        .guess-wrap,
+        .ans-grid,
+        .pen-grid,
+        .pts-grid,
+        .rating-grid,
+        .strat-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .steps {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .phase {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .phase .chip {
+          justify-self: start;
+        }
+        .sections {
+          display: none;
+        }
+        .hero-vis {
+          display: none;
+        }
+        .arrow {
+          display: none;
+        }
+      }
+      @media (max-width: 600px) {
+        :root {
+          --cw: 34px;
+        }
+        .vlabel {
+          width: 46px;
+          font-size: 12px;
+        }
+        .cell {
+          font-size: 14px;
+          border-radius: 9px;
+        }
+        .f {
+          white-space: normal;
+          overflow-wrap: anywhere;
+        }
+        .steps {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .stmt p {
+          padding-left: 0;
+          padding-top: 4px;
+        }
+        .stmt .cf {
+          position: static;
+          display: inline-block;
+          margin-bottom: 8px;
+        }
+        .pen-row {
+          grid-template-columns: 0.5fr 1fr 0.8fr 1.5fr;
+          font-size: 14px;
+          padding: 9px 10px;
+        }
+        .pen-row .v {
+          font-size: 13px;
+        }
+        .fs {
+          display: none;
+        }
+        .controls button {
+          padding: 8px 10px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *:before,
+        *:after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          transition-delay: 0s !important;
+        }
+      }
+    </style>
+    <div class="deck" id="deck" dir="rtl">
+      <!-- 1 HERO -->
+      <section class="slide active" data-sec="0">
+        <div class="content hero">
+          <div>
+            <div class="kicker">● الأسبوع 8 · Problem Solving</div>
+            <h1>
+              <bdi dir="ltr">Sorting</bdi><br /><span class="amber"
+                ><bdi dir="ltr">&amp; Binary Search</bdi></span
+              >
+            </h1>
+            <p class="lead">
+              الترتيب يصنع النظام، والبحث الثنائي يستغلّه: بدل
+              <bdi class="f" dir="ltr">n</bdi> خطوة نحتاج
+              <bdi class="f" dir="ltr">log n</bdi> خطوة فقط.
+            </p>
+            <p>
+              وفي آخر الجلسة: كيف تعمل مسابقات Codeforces، وكيف ترفع الـ Rating.
+            </p>
+          </div>
+          <div class="hero-vis" aria-hidden="true">
+            <div class="hv">
+              <div class="hv-row">
+                <div class="hv-box"></div>
+                <div class="hc d1">2</div>
+                <div class="hc d1">5</div>
+                <div class="hc d1">8</div>
+                <div class="hc d1">12</div>
+                <div class="hc d1">16</div>
+                <div class="hc hit">23</div>
+                <div class="hc d3">38</div>
+                <div class="hc d2">56</div>
+                <div class="hc d2">72</div>
+                <div class="hc d2">91</div>
+                <div class="hv-mid">mid</div>
+              </div>
+              <div class="hv-cap">
+                <span>find x = 23</span><span><b>3 steps</b> · not 6</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 WHY SORT -->
+      <section class="slide" data-sec="0">
+        <div class="content">
+          <div class="kicker">● لماذا نرتّب؟</div>
+          <h2>بعد الترتيب تصبح أسئلة كثيرة <span class="amber">سهلة</span></h2>
+          <div class="grid4">
+            <div class="card c-sky">
+              <div class="ic">↔</div>
+              <h3>الأطراف والوسط</h3>
+              <p>
+                <bdi class="f" dir="ltr">a[0]</bdi> أصغر قيمة، و
+                <bdi class="f" dir="ltr">a[n-1]</bdi> أكبر قيمة، و
+                <bdi class="f" dir="ltr">a[n/2]</bdi> هو الوسيط.
+              </p>
+            </div>
+            <div class="card c-mint">
+              <div class="ic">==</div>
+              <h3>المتساوي يتجاور</h3>
+              <p>
+                عدّ التكرارات أو حذف المكرر يصبح مرورًا واحدًا على العناصر
+                المتجاورة.
+              </p>
+            </div>
+            <div class="card c-violet">
+              <div class="ic">→←</div>
+              <h3>Two Pointers</h3>
+              <p>
+                كما في الأسبوع الماضي: المؤشران من الطرفين يحتاجان Array مرتبة.
+              </p>
+            </div>
+            <div class="card">
+              <div class="ic">½</div>
+              <h3>Binary Search</h3>
+              <p>
+                في Array مرتبة نجد أي قيمة في
+                <bdi class="f" dir="ltr">log n</bdi> خطوة. هذا موضوع اليوم.
+              </p>
+            </div>
+          </div>
+          <div class="callout">
+            التكلفة <bdi class="f" dir="ltr">O(n log n)</bdi> مرة واحدة للترتيب،
+            ثم نستفيد منه في كل سؤال بعده.
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 ROADMAP -->
+      <section class="slide" data-sec="0">
+        <div class="content">
+          <div class="kicker">● خطة الجلسة · 90 دقيقة</div>
+          
+          <div class="roadmap">
+            <div class="phase">
+              <div class="t">0–10 د</div>
+              <p>
+                لماذا نرتّب؟ ودالة <bdi class="f" dir="ltr">sort</bdi> في
+                <bdi>C++</bdi>.
+              </p>
+              <span class="chip">مقدمة</span>
+            </div>
+            <div class="phase">
+              <div class="t">10–25 د</div>
+              <p>
+                ترتيب الأزواج، ثم مسألة <bdi class="f" dir="ltr">1843A</bdi>.
+              </p>
+              <span class="chip">Sorting</span>
+            </div>
+            <div class="phase">
+              <div class="t">25–60 د</div>
+              <p>
+                فكرة Binary Search، و
+                <bdi class="f" dir="ltr">lower_bound</bdi>، ومسألة
+                <bdi class="f" dir="ltr">978C</bdi>، ثم البحث على الجواب ومسألة
+                <bdi class="f" dir="ltr">2008C</bdi>.
+              </p>
+              <span class="chip">Binary Search</span>
+            </div>
+            <div class="phase">
+              <div class="t">60–80 د</div>
+              <p>
+                مسابقات Codeforces: أنواع الجولات، الـ Penalty، الـ Rating، وكيف
+                تحل مسائل أكثر.
+              </p>
+              <span class="chip">Contests</span>
+            </div>
+            <div class="phase">
+              <div class="t">80–90 د</div>
+              <p>نشاط سريع بالشات، ورقة مراجعة، والواجب.</p>
+              <span class="chip">خلاصة</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 SORT DEMO -->
+      <section class="slide compact" data-sec="1">
+        <div class="content">
+          <div class="kicker sky">● Sorting · دالة sort</div>
+          <h2>سطر واحد يرتّب الـ Array</h2>
+          <div class="viz" data-viz="sortDemo"></div>
+          <div class="callout sky">
+            التعقيد <bdi class="f" dir="ltr">O(n log n)</bdi>: مع
+            <bdi class="f" dir="ltr">n = 2·10⁵</bdi> حوالي
+            <bdi class="f" dir="ltr">3.5·10⁶</bdi> عملية. رتّب مرة واحدة قبل
+            الأسئلة، لا داخل حلقة.
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 PAIRS -->
+      <section class="slide compact" data-sec="1">
+        <div class="content">
+          <div class="kicker sky">● Sorting · ترتيب الأزواج</div>
+          <h2>
+            <bdi class="f" dir="ltr">pair</bdi> تُرتَّب حسب
+            <bdi class="f" dir="ltr">first</bdi>، ثم
+            <bdi class="f" dir="ltr">second</bdi>
+          </h2>
+          <div class="viz" data-viz="pairSort"></div>
+          <div class="callout sky">
+            استعمل <bdi class="f" dir="ltr">pair</bdi> عندما يجب أن تتحرك قيمتان
+            معًا: السعر مع الجودة، أو القيمة مع موقعها الأصلي.
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 CASE 1 STATEMENT -->
+      <section class="slide" data-sec="1">
+        <div class="content">
+          <div class="kicker sky">● مسألة 1 · Sorting</div>
+          <h2>
+            1843A — Sasha and Array Coloring <span class="badge">*800</span>
+          </h2>
+          <div class="stmt">
+            <a
+              class="cf"
+              href="https://codeforces.com/problemset/problem/1843/A"
+              target="_blank"
+              rel="noopener"
+              >CF ↗</a
+            >
+            <p>
+              لوّن كل عنصر في الـ Array بلون واحد، ويمكنك استخدام أي عدد من
+              الألوان.
+            </p>
+            <p>
+              تكلفة اللون = أكبر عنصر فيه − أصغر عنصر فيه، والتكلفة الكلية =
+              مجموع تكاليف الألوان. المطلوب: <b>أكبر</b> تكلفة كلية ممكنة.
+            </p>
+            <div class="io">
+              <span>n ≤ 50 · a[i] ≤ 50</span><span>1 5 6 3 4 → 7</span
+              ><span>1 6 3 9 → 11</span>
+            </div>
+          </div>
+          <div class="steps">
+            <div class="step">
+              <div class="n">01 · افهم</div>
+              <h3>من يهم في اللون؟</h3>
+              <p>الأكبر والأصغر فقط. أي عنصر بينهما لا يغيّر التكلفة.</p>
+            </div>
+            <div class="step">
+              <div class="n">02 · جرّب</div>
+              <h3>المثال الأول</h3>
+              <p>
+                <bdi class="f" dir="ltr">{1, 6}</bdi> و
+                <bdi class="f" dir="ltr">{3, 5}</bdi> و
+                <bdi class="f" dir="ltr">{4}</bdi>:
+                <bdi class="f" dir="ltr">5 + 2 + 0 = 7</bdi>
+              </p>
+            </div>
+            <div class="step key">
+              <div class="n">03 · Observation</div>
+              <h3>الكبير مع الصغير</h3>
+              <p>
+                بعد الترتيب: الأكبر مع الأصغر بلون، والثاني الأكبر مع الثاني
+                الأصغر بلون، وهكذا.
+              </p>
+            </div>
+            <div class="step">
+              <div class="n">04 · Pattern</div>
+              <h3>Sort + Two Pointers</h3>
+              <p>
+                الجواب = مجموع
+                <bdi class="f" dir="ltr">a[n−1−i] − a[i]</bdi> لكل
+                <bdi class="f" dir="ltr">i &lt; n/2</bdi>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 CASE 1 ANIM -->
+      <section class="slide compact" data-sec="1">
+        <div class="content">
+          <div class="kicker sky">● مسألة 1 · الحل خطوة بخطوة</div>
+          <h2><bdi class="f" dir="ltr">a = 1 5 6 3 4</bdi></h2>
+          <div class="viz" data-viz="sasha"></div>
+          <div class="callout sky">
+            التعقيد <bdi class="f" dir="ltr">O(n log n)</bdi> بسبب الترتيب،
+            والباقي مرور واحد.
+          </div>
+        </div>
+      </section>
+
+      <!-- 8 GUESS GAME -->
+      <section class="slide" data-sec="2">
+        <div class="content">
+          <div class="kicker">● Binary Search · الفكرة</div>
+          <h2>
+            فكّر برقم من 1 إلى 100… وسأعرفه في
+            <span class="amber">7 محاولات</span> على الأكثر
+          </h2>
+          <div class="guess-wrap">
+            <div class="guess" id="guess">
+              <div class="g-top">
+                <span class="g-label">تخميني:</span
+                ><span class="g-num" id="gNum">50</span
+                ><span class="g-meta" id="gMeta"></span>
+              </div>
+              <div class="g-track" dir="ltr">
+                <div class="g-range" id="gRange"></div>
+                <div class="g-mark" id="gMark"></div>
+              </div>
+              <div class="g-ticks">
+                <span>1</span><span>25</span><span>50</span><span>75</span
+                ><span>100</span>
+              </div>
+              <div class="g-btns">
+                <button type="button" data-g="up" id="gUp">رقمي أكبر</button
+                ><button type="button" data-g="down" id="gDown">
+                  رقمي أصغر</button
+                ><button type="button" data-g="ok" class="ok" id="gOk">
+                  صح!</button
+                ><button type="button" data-g="reset" id="gReset">
+                  من جديد
+                </button>
+              </div>
+              <div class="g-msg" id="gMsg" aria-live="polite"></div>
+              <div class="g-hist" id="gHist"></div>
+            </div>
+            <div>
+              <div class="tbl-wrap">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th>n</th>
+                      <th>بحث خطي</th>
+                      <th>Binary Search</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="reveal-only">
+                      <td class="num">100</td>
+                      <td class="num">100</td>
+                      <td class="num"><b class="mint">7</b></td>
+                    </tr>
+                    <tr class="reveal-only">
+                      <td class="num">10⁶</td>
+                      <td class="num">10⁶</td>
+                      <td class="num"><b class="mint">20</b></td>
+                    </tr>
+                    <tr class="reveal-only">
+                      <td class="num">10⁹</td>
+                      <td class="num">10⁹</td>
+                      <td class="num"><b class="mint">30</b></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="tbl-note">عدد المقارنات في أسوأ حالة.</p>
+            </div>
+          </div>
+          <div class="callout">
+            كل جواب «أكبر» أو «أصغر» يحذف نصف الاحتمالات. هذا ممكن لأن الأرقام
+            مرتبة: إذا كان رقمك أكبر من 50 فكل ما تحت 50 مستبعد.
+          </div>
+        </div>
+      </section>
+
+      <!-- 9 BS FIND -->
+      <section class="slide compact" data-sec="2">
+        <div class="content">
+          <div class="kicker">● Binary Search · على Array مرتبة</div>
+          <h2>
+            <bdi class="f" dir="ltr">lo · mid · hi</bdi>: كل خطوة تحذف النصف
+          </h2>
+          <div class="viz" data-viz="bsFind"></div>
+          <div class="callout">
+            المجال <bdi class="f" dir="ltr">[lo, hi]</bdi> ينقص للنصف في كل خطوة
+            → <bdi class="f" dir="ltr">O(log n)</bdi>. الشرط الأساسي: الـ Array
+            مرتبة.
+          </div>
+        </div>
+      </section>
+
+      <!-- 10 BOUNDS -->
+      <section class="slide compact" data-sec="2">
+        <div class="content">
+          <div class="kicker">● Binary Search · في مكتبة <bdi>C++</bdi></div>
+          <h2>
+            <bdi class="f" dir="ltr">lower_bound</bdi> و
+            <bdi class="f" dir="ltr">upper_bound</bdi>
+          </h2>
+          <div class="viz" data-viz="bounds"></div>
+          <div class="callout">
+            الدالتان <bdi class="f" dir="ltr">O(log n)</bdi> وتحتاجان Array
+            مرتبة. عدد القيم بين L و R =
+            <bdi class="f" dir="ltr">upper_bound(R) − lower_bound(L)</bdi>
+          </div>
+        </div>
+      </section>
+
+      <!-- 11 CASE 2 STATEMENT -->
+      <section class="slide" data-sec="2">
+        <div class="content">
+          <div class="kicker">● مسألة 2 · Prefix Sum + Binary Search</div>
+          <h2>978C — Letters <span class="badge">*1000</span></h2>
+          <div class="stmt">
+            <a
+              class="cf"
+              href="https://codeforces.com/problemset/problem/978/C"
+              target="_blank"
+              rel="noopener"
+              >CF ↗</a
+            >
+            <p>
+              يوجد n سكن، وفي السكن i عدد <bdi class="f" dir="ltr">a[i]</bdi> من
+              الغرف. الغرف مرقّمة ترقيمًا عامًا متتاليًا: غرف السكن 1 أولًا، ثم
+              غرف السكن 2، وهكذا.
+            </p>
+            <p>
+              لكل رسالة رقم غرفة عام <bdi class="f" dir="ltr">b</bdi>: اطبع رقم
+              السكن، ورقم الغرفة داخل هذا السكن.
+            </p>
+            <div class="io">
+              <span>n, m ≤ 2·10⁵</span><span>a[i] ≤ 10¹⁰ → long long</span
+              ><span>a = 10 15 12 , b = 23 → 2 13</span>
+            </div>
+          </div>
+          <div class="strip" dir="ltr">
+            <div class="seg s1" style="flex: 10">
+              <b>سكن 1</b><span>1–10</span>
+            </div>
+            <div class="seg s2" style="flex: 15">
+              <b>سكن 2</b><span>11–25</span>
+            </div>
+            <div class="seg s3" style="flex: 12">
+              <b>سكن 3</b><span>26–37</span>
+            </div>
+            <div class="pin" style="left: 61%"><span>b = 23</span></div>
+          </div>
+          <p class="strip-note">
+            الغرفة العامة 23 تقع في السكن 2، وهي الغرفة
+            <bdi class="f" dir="ltr">23 − 10 = 13</bdi> داخله.
+          </p>
+          <div class="steps">
+            <div class="step">
+              <div class="n">01 · Brute Force</div>
+              <h3>نمشي على السكنات</h3>
+              <p>
+                لكل رسالة <bdi class="f" dir="ltr">O(n)</bdi> → المجموع حتى
+                <bdi class="f" dir="ltr">4·10¹⁰</bdi> ✗
+              </p>
+            </div>
+            <div class="step">
+              <div class="n">02 · Prefix Sum</div>
+              <h3>من الأسبوع 6</h3>
+              <p>
+                <bdi class="f" dir="ltr">pre[i]</bdi> = عدد الغرف في أول i سكن.
+              </p>
+            </div>
+            <div class="step key">
+              <div class="n">03 · Observation</div>
+              <h3>أول pre ≥ b</h3>
+              <p>
+                السكن = أول f بحيث <bdi class="f" dir="ltr">pre[f] ≥ b</bdi>،
+                والغرفة = <bdi class="f" dir="ltr">b − pre[f−1]</bdi>
+              </p>
+            </div>
+            <div class="step">
+              <div class="n">04 · Pattern</div>
+              <h3>pre مرتبة → Binary Search</h3>
+              <p>
+                كل رسالة <bdi class="f" dir="ltr">O(log n)</bdi> → المجموع
+                <bdi class="f" dir="ltr">O((n + m) log n)</bdi>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12 CASE 2 ANIM -->
+      <section class="slide compact" data-sec="2">
+        <div class="content">
+          <div class="kicker">● مسألة 2 · الحل خطوة بخطوة</div>
+          <h2>
+            <bdi class="f" dir="ltr">a = 10 15 12</bdi> ·
+            <bdi class="f" dir="ltr">pre = 0 10 25 37</bdi>
+          </h2>
+          <div class="viz" data-viz="letters"></div>
+          <div class="callout">
+            نفس البحث في سطر واحد:
+            <bdi class="f" dir="ltr"
+              >f = lower_bound(pre.begin() + 1, pre.end(), b) −
+              pre.begin();</bdi
+            ><br />ولأن قيم b تأتي مرتبة تصاعديًا، يمكن حلها أيضًا بـ Two
+            Pointers.
+          </div>
+        </div>
+      </section>
+
+      <!-- 13 BS ON ANSWER -->
+      <section class="slide" data-sec="2">
+        <div class="content">
+          <div class="kicker violet">● Binary Search · على الجواب</div>
+          <h2>
+            أحيانًا نبحث عن <span class="violet">الجواب نفسه</span>، لا عن عنصر
+            في Array
+          </h2>
+          <div class="ans-grid">
+            <div class="steps v">
+              <div class="step">
+                <div class="n">01</div>
+                <h3>ما هو الجواب؟</h3>
+                <p>
+                  رقم نريد أكبر قيمة أو أصغر قيمة له: أطول طول، أقل وقت، أكبر
+                  عدد.
+                </p>
+              </div>
+              <div class="step">
+                <div class="n">02</div>
+                <h3>ما مداه؟</h3>
+                <p>
+                  <bdi class="f" dir="ltr">lo</bdi> = أصغر جواب ممكن، و
+                  <bdi class="f" dir="ltr">hi</bdi> = أكبر جواب ممكن (من
+                  القيود).
+                </p>
+              </div>
+              <div class="step key">
+                <div class="n">03</div>
+                <h3>هل <bdi class="f" dir="ltr">check(k)</bdi> رتيب؟</h3>
+                <p>
+                  إذا نجح k ينجح كل ما هو أصغر منه:
+                  <bdi class="f" dir="ltr">T T T T F F F</bdi>
+                </p>
+              </div>
+              <div class="step">
+                <div class="n">04</div>
+                <h3>ابحث عن آخر T</h3>
+                <p>
+                  بالقالب المقابل، بعدد فحوصات
+                  <bdi class="f" dir="ltr">log(hi − lo)</bdi> فقط.
+                </p>
+              </div>
+            </div>
+            <div>
+              <div class="tf">
+                <i class="t">T</i><i class="t">T</i><i class="t">T</i
+                ><i class="t">T</i><i class="t">T</i><i class="x">F</i
+                ><i class="x">F</i><i class="x">F</i><i class="x">F</i
+                ><span class="mk">آخر T = الجواب</span>
+              </div>
+              <pre class="code">
+long long lo = LOW, hi = HIGH, ans = LOW;
+while (lo &lt;= hi) {
+    long long mid = (lo + hi) / 2;
+    if (check(mid)) { ans = mid; lo = mid + 1; }
+    else hi = mid - 1;
+}
+// ans = largest k with check(k) == true</pre
+              >
+            </div>
+          </div>
+          <div class="callout violet">
+            إذا كان الشكل <bdi class="f" dir="ltr">F F F T T T</bdi> (نريد أصغر
+            قيمة تنجح) نعكس: عند النجاح
+            <bdi class="f" dir="ltr">ans = mid; hi = mid − 1;</bdi>
+          </div>
+        </div>
+      </section>
+
+      <!-- 14 CASE 3 STATEMENT -->
+      <section class="slide" data-sec="2">
+        <div class="content">
+          <div class="kicker violet">● مسألة 3 · Binary Search على الجواب</div>
+          <h2>2008C — Longest Good Array <span class="badge">*800</span></h2>
+          <div class="stmt">
+            <a
+              class="cf"
+              href="https://codeforces.com/problemset/problem/2008/C"
+              target="_blank"
+              rel="noopener"
+              >CF ↗</a
+            >
+            <p>
+              نقول عن Array إنها «جيدة» إذا كانت متزايدة تمامًا، والفروقات بين
+              كل عنصرين متجاورين متزايدة تمامًا أيضًا.
+            </p>
+            <p>
+              معطى <bdi class="f" dir="ltr">l</bdi> و
+              <bdi class="f" dir="ltr">r</bdi>: ما أطول Array جيدة كل عناصرها
+              بين l و r؟
+            </p>
+            <div class="io">
+              <span>t ≤ 10⁴ · 1 ≤ l ≤ r ≤ 10⁹</span
+              ><span>l=1, r=5 → 3 (1 2 5)</span><span>l=10, r=20 → 5</span>
+            </div>
+          </div>
+          <div class="steps">
+            <div class="step">
+              <div class="n">01 · افهم</div>
+              <h3>أصغر قفزات</h3>
+              <p>
+                لنطيل الـ Array نبدأ من l ونجعل الفروقات
+                <bdi class="f" dir="ltr">1, 2, 3, …</bdi>
+              </p>
+            </div>
+            <div class="step">
+              <div class="n">02 · رياضيات</div>
+              <h3>العنصر رقم k</h3>
+              <p>
+                <bdi class="f" dir="ltr"
+                  >l + 1 + 2 + … + (k−1) = l + k(k−1)/2</bdi
+                >
+              </p>
+            </div>
+            <div class="step key">
+              <div class="n">03 · check(k)</div>
+              <h3>هل الطول k ممكن؟</h3>
+              <p>
+                إذا كان <bdi class="f" dir="ltr">l + k(k−1)/2 ≤ r</bdi>. وإذا
+                نجح k نجح كل ما هو أصغر.
+              </p>
+            </div>
+            <div class="step">
+              <div class="n">04 · Pattern</div>
+              <h3>Binary Search على k</h3>
+              <p>
+                الجواب لا يتجاوز 44721، فنبحث في
+                <bdi class="f" dir="ltr">[1, 10⁵]</bdi>: حوالي 17 فحصًا لكل
+                اختبار.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 15 CASE 3 ANIM -->
+      <section class="slide compact" data-sec="2">
+        <div class="content">
+          <div class="kicker violet">● مسألة 3 · الحل خطوة بخطوة</div>
+          <h2>
+            <bdi class="f" dir="ltr">l = 10</bdi> ·
+            <bdi class="f" dir="ltr">r = 20</bdi>
+          </h2>
+          <div class="viz" data-viz="goodArray"></div>
+          <div class="callout violet">
+            انتبه: <bdi class="f" dir="ltr">mid · (mid − 1)</bdi> يصل إلى
+            <bdi class="f" dir="ltr">10¹⁰</bdi> → استخدم
+            <bdi class="f" dir="ltr">long long</bdi>
+          </div>
+        </div>
+      </section>
+
+      <!-- 16 CONTEST TYPES -->
+      <section class="slide" data-sec="3">
+        <div class="content">
+          <div class="kicker coral">● مسابقات Codeforces</div>
+          <h2>أي جولة تناسبك؟</h2>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>الجولة</th>
+                  <th>Rated لمن؟</th>
+                  <th>نظام الترتيب</th>
+                  <th>المسائل · الوقت</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="hot">
+                  <td><b>Div. 4</b></td>
+                  <td>أقل من 1400، والحسابات الجديدة</td>
+                  <td>ICPC + Penalty</td>
+                  <td>حتى 8 مسائل</td>
+                </tr>
+                <tr class="hot">
+                  <td><b>Div. 3</b></td>
+                  <td>أقل من 1600</td>
+                  <td>ICPC + Penalty</td>
+                  <td>7 مسائل · <bdi class="f" dir="ltr">2:15</bdi></td>
+                </tr>
+                <tr>
+                  <td><b>Educational</b></td>
+                  <td>أقل من 2100</td>
+                  <td>ICPC + Penalty</td>
+                  <td>6–7 مسائل · <bdi class="f" dir="ltr">2:00</bdi></td>
+                </tr>
+                <tr>
+                  <td><b>Div. 2</b></td>
+                  <td>أقل من 2100</td>
+                  <td>نقاط تتناقص مع الوقت</td>
+                  <td>6 مسائل تقريبًا · <bdi class="f" dir="ltr">2:00</bdi></td>
+                </tr>
+                <tr>
+                  <td><b>Div. 1 + 2</b></td>
+                  <td>الجميع</td>
+                  <td>نقاط تتناقص مع الوقت</td>
+                  <td>مسائل أكثر ووقت أطول</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flow">
+            <div class="node">
+              Register<small>من صفحة Contests قبل البداية</small>
+            </div>
+            <div class="arrow">←</div>
+            <div class="node">
+              حلّ وأرسل<small>Submit واختر <bdi>C++</bdi></small>
+            </div>
+            <div class="arrow">←</div>
+            <div class="node">
+              الاختبار النهائي<small>بعد النهاية على كل الاختبارات</small>
+            </div>
+            <div class="arrow">←</div>
+            <div class="node">
+              تحديث الـ Rating<small>بعد الاختبار النهائي</small>
+            </div>
+          </div>
+          <div class="callout coral">
+            ابدأوا بـ Div. 4 و Div. 3. إذا سجّلت ولم ترسل أي حل لا يتغيّر
+            تقييمك. وأي جولة قديمة يمكنك دخولها <b>Virtual</b>: نفس المسائل ونفس
+            الوقت، بدون تأثير على الـ Rating.
+          </div>
+        </div>
+      </section>
+
+      <!-- 17 ICPC PENALTY -->
+      <section class="slide" data-sec="3">
+        <div class="content">
+          <div class="kicker coral">● Div. 4 · Div. 3 · Educational</div>
+          <h2>
+            الترتيب: عدد المسائل أولًا، ثم الـ
+            <span class="coral">Penalty</span>
+          </h2>
+          <div class="pen-grid">
+            <div>
+              <p class="formula">
+                <b>Penalty</b> = مجموع (دقيقة القبول + 10 دقائق عن كل محاولة
+                خاطئة قبلها)<small
+                  >للمسائل المحلولة فقط. الأقل Penalty يتقدّم عند التساوي في عدد
+                  المسائل.</small
+                >
+              </p>
+              <div class="pen">
+                <div class="pen-row head">
+                  <span>المسألة</span><span>قُبلت بالدقيقة</span
+                  ><span>محاولات خاطئة</span><span>Penalty</span>
+                </div>
+                <div class="pen-row reveal-only">
+                  <span><b>A</b></span
+                  ><span class="v">7</span><span class="v">0</span
+                  ><span class="v">7</span>
+                </div>
+                <div class="pen-row reveal-only">
+                  <span><b>B</b></span
+                  ><span class="v">21</span><span class="v">1</span
+                  ><span class="v">21 + 10 = 31</span>
+                </div>
+                <div class="pen-row reveal-only">
+                  <span><b>C</b></span
+                  ><span class="v">58</span><span class="v">2</span
+                  ><span class="v">58 + 20 = 78</span>
+                </div>
+                <div class="pen-row miss reveal-only">
+                  <span><b>D</b></span
+                  ><span>لم تُحل</span><span class="v">3</span
+                  ><span class="v">0</span>
+                </div>
+                <div class="pen-row total reveal-only">
+                  <span>المجموع</span><span>3 مسائل</span><span></span
+                  ><span class="v">116</span>
+                </div>
+              </div>
+            </div>
+            <div class="side">
+              <div class="card c-coral reveal-only">
+                <h3>من يتقدّم؟</h3>
+                <p>
+                  صديقك حلّ 3 مسائل بـ Penalty = 95 فيتقدّم عليك. لو حلّ مسألتين
+                  فقط تتقدّم أنت مهما كانت الـ Penalty.
+                </p>
+              </div>
+              <div class="card c-mint reveal-only">
+                <h3>ما لا يُحسب</h3>
+                <p>
+                  Compilation Error والخطأ على Test 1 لا يضيفان Penalty،
+                  والمسألة غير المحلولة لا تضيف شيئًا.
+                </p>
+              </div>
+              <div class="card c-sky reveal-only">
+                <h3>بعد النهاية</h3>
+                <p>
+                  12 ساعة Hacks مفتوحة للجميع، ثم تُختبر كل الحلول على
+                  الاختبارات النهائية.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 18 DIV2 POINTS -->
+      <section class="slide" data-sec="3">
+        <div class="content">
+          <div class="kicker coral">● Div. 2 · Div. 1 + 2</div>
+          <h2>لكل مسألة نقاط <span class="coral">تتناقص مع الوقت</span></h2>
+          <div class="pts-grid">
+            <figure class="chart reveal-only">
+              <svg
+                viewBox="0 0 640 300"
+                role="img"
+                aria-label="نقاط المسألة A (500) والمسألة B (1000) تتناقص خطيًا خلال 120 دقيقة"
+              >
+                <g class="grid">
+                  <line x1="56" y1="24" x2="616" y2="24" />
+                  <line x1="56" y1="81" x2="616" y2="81" />
+                  <line x1="56" y1="138" x2="616" y2="138" />
+                  <line x1="56" y1="195" x2="616" y2="195" />
+                  <line x1="56" y1="252" x2="616" y2="252" />
+                </g>
+                <g class="axis" text-anchor="end">
+                  <text x="48" y="28">1000</text>
+                  <text x="48" y="85">750</text>
+                  <text x="48" y="142">500</text>
+                  <text x="48" y="199">250</text>
+                  <text x="48" y="256">0</text>
+                </g>
+                <g class="axis" text-anchor="middle">
+                  <text x="56" y="274">0</text>
+                  <text x="196" y="274">30</text>
+                  <text x="336" y="274">60</text>
+                  <text x="476" y="274">90</text>
+                  <text x="616" y="274">120</text>
+                  <text class="lbl" x="336" y="294">الدقيقة</text>
+                </g>
+                <path
+                  class="draw"
+                  pathLength="1"
+                  d="M56 24 L616 133.4"
+                  fill="none"
+                  stroke="var(--amber)"
+                  stroke-width="3.5"
+                  stroke-linecap="round"
+                />
+                <path
+                  class="draw"
+                  pathLength="1"
+                  d="M56 138 L616 192.7"
+                  fill="none"
+                  stroke="var(--sky)"
+                  stroke-width="3.5"
+                  stroke-linecap="round"
+                />
+                <text
+                  x="604"
+                  y="44"
+                  text-anchor="end"
+                  fill="var(--amber)"
+                  font-size="14"
+                  font-weight="700"
+                >
+                  B: 1000 → 520
+                </text>
+                <text
+                  x="604"
+                  y="64"
+                  text-anchor="end"
+                  fill="var(--sky)"
+                  font-size="14"
+                  font-weight="700"
+                >
+                  A: 500 → 260
+                </text>
+                <line
+                  x1="102.7"
+                  y1="33.1"
+                  x2="102.7"
+                  y2="55.9"
+                  stroke="var(--coral)"
+                  stroke-width="2"
+                  stroke-dasharray="4 3"
+                />
+                <circle cx="102.7" cy="33.1" r="4.5" fill="var(--amber)" />
+                <circle cx="102.7" cy="55.9" r="5.5" fill="var(--coral)" />
+                <text
+                  x="114"
+                  y="60"
+                  fill="var(--coral)"
+                  font-size="14"
+                  font-weight="700"
+                >
+                  860
+                </text>
+              </svg>
+              <figcaption>
+                قيمة المسألة حسب دقيقة الحل في جولة مدتها ساعتان.
+              </figcaption>
+            </figure>
+            <ul class="facts">
+              <li class="reveal-only">
+                قيمة كل مسألة تُعلَن قبل الجولة، مثلًا
+                <bdi class="f" dir="ltr">500 · 750 · 1000 · …</bdi>
+              </li>
+              <li class="reveal-only">
+                تخسر المسألة <bdi class="f" dir="ltr">1/250</bdi> من قيمتها كل
+                دقيقة: مسألة 500 تخسر نقطتين بالدقيقة.
+              </li>
+              <li class="reveal-only">
+                كل محاولة خاطئة على مسألة حللتها:
+                <bdi class="f" dir="ltr">−50</bdi>. والمسألة المحلولة لا تقل عن
+                <bdi class="f" dir="ltr">30%</bdi> من قيمتها.
+              </li>
+              <li class="reveal-only">
+                أثناء الجولة يُختبر حلك على <b>Pretests</b> فقط، وبعدها
+                <b>System Tests</b> قد تُسقطه.
+              </li>
+              <li class="reveal-only">
+                Hack ناجح <bdi class="f" dir="ltr">+100</bdi>، وفاشل
+                <bdi class="f" dir="ltr">−50</bdi>
+              </li>
+            </ul>
+          </div>
+          <div class="callout coral">
+            مثال: مسألة B (1000) حُلّت بالدقيقة 10 بعد محاولتين خاطئتين:
+            <bdi class="f" dir="ltr">1000 − 40 − 100 = 860</bdi>
+          </div>
+        </div>
+      </section>
+
+      <!-- 19 RATING -->
+      <section class="slide" data-sec="3">
+        <div class="content">
+          <div class="kicker coral">● الـ Rating</div>
+          <h2>كيف يتغيّر الـ Rating؟</h2>
+          <div class="rating-grid">
+            <div>
+              <p>
+                بعد كل جولة Rated يُقارَن ترتيبك بالترتيب المتوقّع لتقييمك: إذا
+                كنت أفضل من المتوقّع يرتفع، وإذا كنت أسوأ ينخفض.
+              </p>
+              <figure class="chart reveal-only">
+                <svg
+                  viewBox="0 0 460 250"
+                  role="img"
+                  aria-label="التقييم الظاهر لحساب جديد بعد أول 6 جولات بأداء متوسط: 500، 850، 1100، 1250، 1350، 1400"
+                >
+                  <g class="grid">
+                    <line x1="44" y1="30" x2="450" y2="30" />
+                    <line x1="44" y1="90" x2="450" y2="90" />
+                    <line x1="44" y1="150" x2="450" y2="150" />
+                    <line x1="44" y1="210" x2="450" y2="210" />
+                  </g>
+                  <g class="axis" text-anchor="end">
+                    <text x="38" y="34">1500</text>
+                    <text x="38" y="94">1000</text>
+                    <text x="38" y="154">500</text>
+                    <text x="38" y="214">0</text>
+                  </g>
+                  <line
+                    x1="44"
+                    y1="42"
+                    x2="450"
+                    y2="42"
+                    stroke="var(--mint)"
+                    stroke-dasharray="5 4"
+                    stroke-width="1.5"
+                  />
+                  <rect
+                    class="bar"
+                    x="66"
+                    y="150"
+                    width="40"
+                    height="60"
+                    rx="5"
+                    fill="var(--violet)"
+                  />
+                  <rect
+                    class="bar"
+                    x="130"
+                    y="108"
+                    width="40"
+                    height="102"
+                    rx="5"
+                    fill="var(--violet)"
+                  />
+                  <rect
+                    class="bar"
+                    x="194"
+                    y="78"
+                    width="40"
+                    height="132"
+                    rx="5"
+                    fill="var(--violet)"
+                  />
+                  <rect
+                    class="bar"
+                    x="258"
+                    y="60"
+                    width="40"
+                    height="150"
+                    rx="5"
+                    fill="var(--violet)"
+                  />
+                  <rect
+                    class="bar"
+                    x="322"
+                    y="48"
+                    width="40"
+                    height="162"
+                    rx="5"
+                    fill="var(--violet)"
+                  />
+                  <rect
+                    class="bar"
+                    x="386"
+                    y="42"
+                    width="40"
+                    height="168"
+                    rx="5"
+                    fill="var(--mint)"
+                  />
+                  <g text-anchor="middle" font-size="12" fill="var(--ink)">
+                    <text x="86" y="143">500</text>
+                    <text x="150" y="101">850</text>
+                    <text x="214" y="71">1100</text>
+                    <text x="278" y="53">1250</text>
+                    <text x="342" y="38">1350</text>
+                  </g>
+                  <g class="axis" text-anchor="middle">
+                    <text x="86" y="228">1</text>
+                    <text x="150" y="228">2</text>
+                    <text x="214" y="228">3</text>
+                    <text x="278" y="228">4</text>
+                    <text x="342" y="228">5</text>
+                    <text x="406" y="228">6</text>
+                    <text class="lbl" x="246" y="246">رقم الجولة</text>
+                  </g>
+                  <text
+                    x="406"
+                    y="35"
+                    text-anchor="middle"
+                    font-size="12"
+                    font-weight="700"
+                    fill="var(--mint)"
+                  >
+                    1400
+                  </text>
+                </svg>
+                <figcaption>
+                  التقييم الظاهر لحساب جديد بأداء متوسط في أول 6 جولات.
+                </figcaption>
+              </figure>
+              <p class="small">
+                الحساب الجديد يظهر بتقييم 0، لكنه يُحسب داخليًا من 1400. أول 6
+                جولات تضيف مكافآت
+                <bdi class="f" dir="ltr">+500 +350 +250 +150 +100 +50</bdi> فوق
+                التغيّر الحقيقي، لذلك يرتفع الرقم بسرعة في البداية.
+              </p>
+            </div>
+            <div class="ranks reveal-only">
+              <div class="rk" style="--rc: var(--r-gm)">
+                <i></i><b>Legendary Grandmaster</b><span>3000+</span>
+              </div>
+              <div class="rk" style="--rc: var(--r-gm)">
+                <i></i><b>International Grandmaster</b><span>2600–2999</span>
+              </div>
+              <div class="rk" style="--rc: var(--r-gm)">
+                <i></i><b>Grandmaster</b><span>2400–2599</span>
+              </div>
+              <div class="rk" style="--rc: var(--r-master)">
+                <i></i><b>International Master</b><span>2300–2399</span>
+              </div>
+              <div class="rk" style="--rc: var(--r-master)">
+                <i></i><b>Master</b><span>2100–2299</span>
+              </div>
+              <div class="rk" style="--rc: var(--r-cm)">
+                <i></i><b>Candidate Master</b><span>1900–2099</span>
+              </div>
+              <div class="rk" style="--rc: var(--r-expert)">
+                <i></i><b>Expert</b><span>1600–1899</span>
+              </div>
+              <div class="rk" style="--rc: var(--r-specialist)">
+                <i></i><b>Specialist</b><span>1400–1599</span>
+              </div>
+              <div class="rk you" style="--rc: var(--r-pupil)">
+                <i></i><b>Pupil</b><span>1200–1399</span>
+              </div>
+              <div class="rk you" style="--rc: var(--r-newbie)">
+                <i></i><b>Newbie</b><span>0–1199</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 20 STRATEGY -->
+      <section class="slide" data-sec="3">
+        <div class="content">
+          <div class="kicker coral">● استراتيجية المسابقة</div>
+          <h2>كيف تحل مسائل أكثر في نفس الوقت؟</h2>
+          <div class="strat-grid">
+            <ol class="tips">
+              <li class="reveal-only">
+                <span
+                  ><b>ابدأ بـ A ثم B.</b> المسائل مرتبة تقريبًا حسب الصعوبة،
+                  ووقت الحل يدخل في ترتيبك.</span
+                >
+              </li>
+              <li class="reveal-only">
+                <span
+                  ><b>اقرأ القيود قبل التفكير بالحل.</b>
+                  <bdi class="f" dir="ltr">n ≤ 2·10⁵</bdi> يعني حلًا
+                  <bdi class="f" dir="ltr">O(n log n)</bdi> أو أسرع.</span
+                >
+              </li>
+              <li class="reveal-only">
+                <span
+                  ><b>جرّب قبل Submit:</b> الأمثلة وحالة حدّية (n = 1، قيم
+                  كبيرة). كل WA تكلّفك 10 دقائق أو 50 نقطة.</span
+                >
+              </li>
+              <li class="reveal-only">
+                <span
+                  ><b>علقت 20–25 دقيقة؟</b> افتح Standings وانتقل للمسألة التي
+                  حلّها عدد أكبر، ثم عد لاحقًا.</span
+                >
+              </li>
+              <li class="reveal-only">
+                <span
+                  ><b>بعد الجولة: Upsolve.</b> حلّ مسألة أو مسألتين لم تحلّهما
+                  بعد قراءة الـ Editorial. هنا يأتي التحسّن الحقيقي.</span
+                >
+              </li>
+            </ol>
+            <div class="reveal-only">
+              <p class="tmpl-h">Template جاهز للمسابقات</p>
+              <pre class="code">
+#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    int t;
+    cin &gt;&gt; t;
+    while (t--) {
+        // solve one test case
+    }
+}</pre
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 21 QUIZ -->
+      <section class="slide" data-sec="4">
+        <div class="content">
+          <div class="kicker">● نشاط</div>
+          <h2>أي أداة تستخدم؟</h2>
+          <div class="grid3 quiz">
+            <div class="card q c-sky">
+              <p>
+                Array غير مرتبة و <bdi class="f" dir="ltr">10⁵</bdi> سؤال: كم
+                عنصرًا قيمته بين L و R؟
+              </p>
+              <div class="ans quiz-ans">
+                sort مرة واحدة، ثم
+                <bdi class="f" dir="ltr">upper_bound(R) − lower_bound(L)</bdi>
+              </div>
+            </div>
+            <div class="card q">
+              <p>أقل سرعة تكفي لإنهاء كل المهام خلال H ساعة.</p>
+              <div class="ans quiz-ans">
+                Binary Search على الجواب: أصغر قيمة تنجح
+              </div>
+            </div>
+            <div class="card q c-violet">
+              <p>هل الرقم x موجود في Array مرتبة؟</p>
+              <div class="ans quiz-ans">
+                <bdi class="f" dir="ltr">binary_search</bdi> أو
+                <bdi class="f" dir="ltr">lower_bound</bdi>
+              </div>
+            </div>
+            <div class="card q c-mint">
+              <p>رتّب الطلاب حسب العلامة، وعند التساوي حسب الرقم الجامعي.</p>
+              <div class="ans quiz-ans">
+                <bdi class="f" dir="ltr">pair</bdi> ثم
+                <bdi class="f" dir="ltr">sort</bdi>
+              </div>
+            </div>
+            <div class="card q c-coral">
+              <p>Div. 3: أنت وصديقك حللتما 4 مسائل. من يتقدّم؟</p>
+              <div class="ans quiz-ans">صاحب الـ Penalty الأقل</div>
+            </div>
+            <div class="card q c-sky">
+              <p>
+                أكبر k بحيث <bdi class="f" dir="ltr">1 + 2 + … + k ≤ n</bdi>
+              </p>
+              <div class="ans quiz-ans">Binary Search على k: آخر T</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 22 CHEAT SHEET -->
+      <section class="slide" data-sec="4">
+        <div class="content">
+          <div class="kicker mint">● ورقة مراجعة</div>
+          <h2>القوالب التي تحتاجها</h2>
+          <div class="grid2 sheet">
+            <div class="card c-mint">
+              <h3>أول موضع يحقق الشرط <span class="tag">F F F T T T</span></h3>
+              <pre class="code">
+int lo = 0, hi = n - 1, ans = n;
+while (lo &lt;= hi) {
+    int mid = (lo + hi) / 2;
+    if (a[mid] &gt;= x) { ans = mid; hi = mid - 1; }
+    else lo = mid + 1;
+}
+// ans == lower_bound position (n if none)</pre
+              >
+            </div>
+            <div class="card c-violet">
+              <h3>آخر جواب ينجح <span class="tag">T T T F F F</span></h3>
+              <pre class="code">
+long long lo = LOW, hi = HIGH, ans = LOW;
+while (lo &lt;= hi) {
+    long long mid = (lo + hi) / 2;
+    if (check(mid)) { ans = mid; lo = mid + 1; }
+    else hi = mid - 1;
+}
+// ans == largest k with check(k) true</pre
+              >
+            </div>
+          </div>
+          <div class="tbl-wrap stl">
+            <table class="tbl">
+              <tbody>
+                <tr>
+                  <td>sort(a.begin(), a.end())</td>
+                  <td>
+                    ترتيب تصاعدي <bdi class="f" dir="ltr">O(n log n)</bdi>
+                  </td>
+                </tr>
+                <tr>
+                  <td>sort(a.rbegin(), a.rend())</td>
+                  <td>ترتيب تنازلي</td>
+                </tr>
+                <tr>
+                  <td>lower_bound(a.begin(), a.end(), x)</td>
+                  <td>
+                    أول عنصر <bdi class="f" dir="ltr">≥ x</bdi> (أو
+                    <bdi class="f" dir="ltr">a.end()</bdi>)
+                  </td>
+                </tr>
+                <tr>
+                  <td>upper_bound(a.begin(), a.end(), x)</td>
+                  <td>
+                    أول عنصر <bdi class="f" dir="ltr">&gt; x</bdi> (أو
+                    <bdi class="f" dir="ltr">a.end()</bdi>)
+                  </td>
+                </tr>
+                <tr>
+                  <td>binary_search(a.begin(), a.end(), x)</td>
+                  <td>
+                    هل x موجود؟ <bdi class="f" dir="ltr">true / false</bdi>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 23 MISTAKES -->
+      <section class="slide" data-sec="4">
+        <div class="content">
+          <div class="kicker coral">● انتبه</div>
+          <h2>أخطاء شائعة</h2>
+          <div class="grid3">
+            <div class="card c-coral">
+              <div class="ic">≠</div>
+              <h3>بحث على Array غير مرتبة</h3>
+              <p>
+                النتيجة خاطئة بدون أي رسالة خطأ. رتّب أولًا، أو تأكد أن الشرط
+                رتيب.
+              </p>
+            </div>
+            <div class="card c-coral">
+              <div class="ic">∞</div>
+              <h3>حلقة لا تنتهي</h3>
+              <p>
+                كتابة <bdi class="f" dir="ltr">lo = mid</bdi> بدل
+                <bdi class="f" dir="ltr">lo = mid + 1</bdi> قد توقف المجال عن
+                الصغر. التزم بالقالب.
+              </p>
+            </div>
+            <div class="card c-coral">
+              <div class="ic">ll</div>
+              <h3>Overflow</h3>
+              <p>
+                <bdi class="f" dir="ltr">mid * mid</bdi> أو مجموع كبير يتجاوز
+                int بسرعة. استخدم <bdi class="f" dir="ltr">long long</bdi>
+              </p>
+            </div>
+            <div class="card c-coral">
+              <div class="ic">end</div>
+              <h3>النتيجة n</h3>
+              <p>
+                إذا رجعت <bdi class="f" dir="ltr">lower_bound</bdi> بالموضع n
+                فلا يوجد عنصر <bdi class="f" dir="ltr">≥ x</bdi>. افحصها قبل
+                قراءة <bdi class="f" dir="ltr">a[i]</bdi>
+              </p>
+            </div>
+            <div class="card c-coral">
+              <div class="ic">TLE</div>
+              <h3>sort داخل الحلقة</h3>
+              <p>
+                ترتيب لكل سؤال = <bdi class="f" dir="ltr">O(q · n log n)</bdi>.
+                رتّب مرة واحدة قبل الأسئلة.
+              </p>
+            </div>
+            <div class="card c-coral">
+              <div class="ic">hi</div>
+              <h3>مجال صغير جدًا</h3>
+              <p>
+                إذا كان الجواب أكبر من <bdi class="f" dir="ltr">hi</bdi> لن
+                تجده. خذ hi من القيود.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 24 HOMEWORK -->
+      <section class="slide" data-sec="4">
+        <div class="content">
+          <div class="kicker mint">● الواجب</div>
+          <h2>طبّق هذا الأسبوع</h2>
+          <div class="hw">
+            <div class="card c-violet">
+              <span class="badge">*800</span>
+              <h3>750A — New Year and Hurry</h3>
+              <p class="hint">
+                نفس فكرة 2008C: أكبر عدد مسائل x بحيث
+                <bdi class="f" dir="ltr">5·x(x+1)/2 ≤ 240 − k</bdi> و
+                <bdi class="f" dir="ltr">x ≤ n</bdi>. Binary Search على الجواب.
+              </p>
+              <a
+                class="go"
+                href="https://codeforces.com/problemset/problem/750/A"
+                target="_blank"
+                rel="noopener"
+                >Open on CF ↗</a
+              >
+            </div>
+            <div class="card c-sky">
+              <span class="badge">*1100</span>
+              <h3>1490C — Sum of Cubes</h3>
+              <p class="hint">
+                جرّب كل a بحيث <bdi class="f" dir="ltr">a³ &lt; x</bdi> (حتى
+                <bdi class="f" dir="ltr">10⁴</bdi> تقريبًا)، ولكل a ابحث بـ
+                Binary Search عن b بحيث
+                <bdi class="f" dir="ltr">b³ = x − a³</bdi>. استخدم
+                <bdi class="f" dir="ltr">long long</bdi>
+              </p>
+              <a
+                class="go"
+                href="https://codeforces.com/problemset/problem/1490/C"
+                target="_blank"
+                rel="noopener"
+                >Open on CF ↗</a
+              >
+            </div>
+            <div class="card c-mint">
+              <span class="badge">*1100</span>
+              <h3>456A — Laptops</h3>
+              <p class="hint">
+                خزّن السعر والجودة في <bdi class="f" dir="ltr">pair</bdi> ورتّب
+                حسب السعر. إذا نقصت الجودة بين جهازين متجاورين فالجواب
+                <bdi class="f" dir="ltr">Happy Alex</bdi>
+              </p>
+              <a
+                class="go"
+                href="https://codeforces.com/problemset/problem/456/A"
+                target="_blank"
+                rel="noopener"
+                >Open on CF ↗</a
+              >
+            </div>
+            <div class="card c-coral">
+              <span class="badge coral">مسابقة</span>
+              <h3>شارك بجولة</h3>
+              <p class="hint">
+                سجّل في أقرب Div. 4 أو Div. 3، أو ادخل جولة قديمة Virtual للمدة
+                كاملة. بعدها اعمل Upsolve لمسألة واحدة على الأقل.
+              </p>
+              <a
+                class="go"
+                href="https://codeforces.com/contests"
+                target="_blank"
+                rel="noopener"
+                >Contests ↗</a
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 25 END -->
+      <section class="slide" data-sec="4">
+        <div class="content center">
+          <!-- <div class="kicker"></div> -->
+          <h1><span class="mint">Thank you</span></h1>
+          <!-- <p style="margin-top: 18px">
+            الأسبوع القادم: <span class="amber">الجداول والمجموعات</span> (<bdi
+              class="f"
+              dir="ltr"
+              >map · set</bdi
+            >)
+          </p> -->
+        </div>
+      </section>
+    </div>
+
+    <div class="footer" dir="rtl">
+      <div class="progress" id="progress"></div>
+      <div class="controls">
+        <button type="button" id="prev">السابق</button>
+        <div class="counter" id="counter">01 / 25</div>
+        <button type="button" id="next">التالي</button>
+      </div>
+      <div class="sections" id="sections">
+        <button type="button" data-sec="0">مقدمة</button
+        ><button type="button" data-sec="1">Sorting</button
+        ><button type="button" data-sec="2">Binary Search</button
+        ><button type="button" data-sec="3">مسابقات Codeforces</button
+        ><button type="button" data-sec="4">خلاصة</button>
+      </div>
+      <div class="tools">
+        <button
+          type="button"
+          class="study"
+          id="study"
+          aria-pressed="false"
+          title="يُظهر كل محتوى الشريحة مباشرة"
+        >
+          وضع الدراسة</button
+        ><button
+          type="button"
+          class="fs"
+          id="fs"
+          aria-label="ملء الشاشة"
+          title="ملء الشاشة"
+        >
+          ⛶
+        </button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+        /* ---------- C++ highlighter ---------- */
+        const KW = new Set([
+          "for",
+          "while",
+          "if",
+          "else",
+          "return",
+          "break",
+          "continue",
+          "const",
+          "auto",
+          "true",
+          "false",
+          "using",
+          "namespace",
+        ]);
+        const TY = new Set([
+          "int",
+          "long",
+          "vector",
+          "string",
+          "char",
+          "bool",
+          "void",
+          "pair",
+        ]);
+        const FN = new Set([
+          "max",
+          "min",
+          "sort",
+          "cout",
+          "cin",
+          "lower_bound",
+          "upper_bound",
+          "binary_search",
+          "begin",
+          "end",
+          "rbegin",
+          "rend",
+          "greater",
+          "check",
+          "sync_with_stdio",
+          "tie",
+          "main",
+        ]);
+        function esc(s) {
+          return s
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        }
+        function hl(src) {
+          const re =
+            /(\/\/.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(#\w+)|\b([A-Za-z_]\w*)\b|\b(\d+(?:e\d+)?)\b/gm;
+          let out = "",
+            last = 0,
+            m;
+          while ((m = re.exec(src))) {
+            out += esc(src.slice(last, m.index));
+            if (m[1]) out += '<span class="tk-c">' + esc(m[1]) + "</span>";
+            else if (m[2]) out += '<span class="tk-s">' + esc(m[2]) + "</span>";
+            else if (m[3]) out += '<span class="tk-k">' + esc(m[3]) + "</span>";
+            else if (m[4]) {
+              const w = m[4];
+              out += KW.has(w)
+                ? '<span class="tk-k">' + w + "</span>"
+                : TY.has(w)
+                  ? '<span class="tk-t">' + w + "</span>"
+                  : FN.has(w)
+                    ? '<span class="tk-f">' + w + "</span>"
+                    : w;
+            } else if (m[5]) out += '<span class="tk-n">' + m[5] + "</span>";
+            last = re.lastIndex;
+          }
+          return out + esc(src.slice(last));
+        }
+        document.querySelectorAll("pre.code").forEach((p) => {
+          p.innerHTML = hl(p.textContent);
+        });
+
+        /* ---------- helpers ---------- */
+        const F = (s) => '<bdi class="f" dir="ltr">' + s + "</bdi>";
+        const range = (a, b) => {
+          const r = [];
+          for (let i = a; i <= b; i++) r.push(i);
+          return r;
+        };
+        const idxRow = (n, s) =>
+          range(0, n - 1).map((i) => ({ v: i + (s || 0) }));
+        const MINT = "var(--mint)",
+          CORAL = "var(--coral)",
+          AMBER = "var(--amber)",
+          VIOLET = "var(--violet)";
+        /* lo/hi/mid pointers on one row; lo==hi merge into one label */
+        function LHM(row, lo, hi, mid, map) {
+          map = map || ((i) => i);
+          const p = [];
+          if (lo === hi)
+            p.push({
+              id: "lo",
+              row,
+              idx: map(lo),
+              label: "lo = hi",
+              color: MINT,
+            });
+          else {
+            p.push({ id: "lo", row, idx: map(lo), label: "lo", color: MINT });
+            p.push({ id: "hi", row, idx: map(hi), label: "hi", color: CORAL });
+          }
+          if (mid != null)
+            p.push({
+              id: "mid",
+              row,
+              idx: map(mid),
+              label: "mid",
+              color: AMBER,
+              top: true,
+            });
+          return p;
+        }
+        const VIZ = {};
+
+        /* 1) sort demo: cells move to sorted positions */
+        VIZ.sortDemo = () => {
+          const a = [5, 2, 9, 1, 5, 6, 3],
+            n = 7;
+          const asc = range(0, n - 1).sort((x, y) => a[x] - a[y] || x - y),
+            desc = asc.slice().reverse();
+          const row = (order, cls) =>
+            order.map((oi, pos) => ({
+              id: "e" + oi,
+              v: a[oi],
+              c: (cls && cls[pos]) || "",
+            }));
+          const code = [
+            "sort(a.begin(), a.end());",
+            "sort(a.rbegin(), a.rend());",
+            "// or: sort(a.begin(), a.end(), greater<int>());",
+          ];
+          const rows = [
+            { k: "i", label: "i", idx: true },
+            { k: "a", label: "a" },
+          ];
+          const fr = [];
+          fr.push({
+            cells: { i: idxRow(n), a: row(range(0, n - 1)) },
+            cap: "Array غير مرتبة، فيها " + F("n = 7") + " عناصر.",
+          });
+          fr.push({
+            cells: { i: idxRow(n), a: row(asc) },
+            cap:
+              F("sort(a.begin(), a.end())") +
+              " ← ترتيب تصاعدي في " +
+              F("O(n log n)") +
+              ". كل عنصر انتقل لمكانه.",
+            line: 0,
+          });
+          fr.push({
+            cells: { i: idxRow(n), a: row(asc, { 0: "hl", 6: "hl" }) },
+            cap:
+              "أصغر قيمة صارت " +
+              F("a[0] = 1") +
+              "، وأكبر قيمة صارت " +
+              F("a[n-1] = 9") +
+              ".",
+            line: 0,
+          });
+          fr.push({
+            cells: { i: idxRow(n), a: row(asc, { 3: "ok", 4: "ok" }) },
+            wins: [{ id: "w", row: "a", l: 3, r: 4, color: "mint" }],
+            cap: "القيمتان المتساويتان 5 و 5 صارتا متجاورتين: عدّ التكرار يحتاج مرورًا واحدًا على العناصر المجاورة.",
+            line: 0,
+          });
+          fr.push({
+            cells: { i: idxRow(n), a: row(asc, { 3: "hl" }) },
+            cap:
+              "العنصر الأوسط " +
+              F("a[n/2] = a[3] = 5") +
+              " هو الوسيط (Median).",
+            line: 0,
+          });
+          fr.push({
+            cells: { i: idxRow(n), a: row(desc) },
+            cap:
+              F("sort(a.rbegin(), a.rend())") +
+              " ← ترتيب تنازلي من الأكبر للأصغر.",
+            line: [1, 2],
+          });
+          return { rows, frames: fr, code };
+        };
+
+        /* 2) sorting pairs: whole column moves together */
+        VIZ.pairSort = () => {
+          const v = [
+            [3, "b"],
+            [1, "z"],
+            [3, "a"],
+            [2, "k"],
+          ];
+          const byDefault = [1, 3, 2, 0],
+            bySecond = [2, 0, 3, 1];
+          const mk = (order, cls) => ({
+            i: idxRow(4),
+            first: order.map((oi, pos) => ({
+              id: "p" + oi,
+              v: v[oi][0],
+              c: (cls && cls[pos]) || "",
+            })),
+            second: order.map((oi, pos) => ({
+              id: "p" + oi,
+              v: v[oi][1],
+              c: (cls && cls[pos]) || "",
+            })),
+          });
+          const code = [
+            "vector<pair<int, char>> v;",
+            "sort(v.begin(), v.end());",
+            "sort(v.begin(), v.end(), [](auto &x, auto &y) {",
+            "    return x.second < y.second;",
+            "});",
+          ];
+          const rows = [
+            { k: "i", label: "i", idx: true },
+            { k: "first", label: "first" },
+            { k: "second", label: "second" },
+          ];
+          const fr = [];
+          fr.push({
+            cells: mk([0, 1, 2, 3]),
+            cap:
+              "كل عنصر زوج " +
+              F("(first, second)") +
+              ": " +
+              F("(3,b) (1,z) (3,a) (2,k)"),
+            line: 0,
+          });
+          fr.push({
+            cells: mk(byDefault),
+            cap:
+              "الترتيب الافتراضي حسب " +
+              F("first") +
+              " تصاعديًا. لاحظ أن العمود كله يتحرك معًا.",
+            line: 1,
+          });
+          fr.push({
+            cells: mk(byDefault, { 2: "hl", 3: "hl" }),
+            wins: [
+              { id: "t1", row: "first", l: 2, r: 3 },
+              { id: "t2", row: "second", l: 2, r: 3 },
+            ],
+            cap:
+              "تعادل في " +
+              F("first") +
+              " (3 = 3)، فيُقارَن " +
+              F("second") +
+              ": " +
+              F("'a'") +
+              " قبل " +
+              F("'b'") +
+              ".",
+            line: 1,
+          });
+          fr.push({
+            cells: mk(bySecond),
+            cap:
+              "بدالة مقارنة خاصة نرتّب حسب " +
+              F("second") +
+              " فقط. الدالة تُرجع " +
+              F("true") +
+              " إذا كان x يجب أن يأتي قبل y.",
+            line: [2, 3, 4],
+          });
+          return { rows, frames: fr, code };
+        };
+
+        /* 3) 1843A Sasha and Array Coloring */
+        VIZ.sasha = () => {
+          const a = [1, 5, 6, 3, 4],
+            n = 5;
+          const asc = range(0, n - 1).sort((x, y) => a[x] - a[y] || x - y);
+          const mk = (order, cls) => ({
+            i: idxRow(n),
+            a: order.map((oi, pos) => ({
+              id: "s" + oi,
+              v: a[oi],
+              c: (cls && cls[pos]) || "",
+            })),
+          });
+          const code = [
+            "sort(a.begin(), a.end());",
+            "int ans = 0;",
+            "for (int i = 0; i < n / 2; i++)",
+            "    ans += a[n - 1 - i] - a[i];",
+          ];
+          const rows = [
+            { k: "i", label: "i", idx: true },
+            { k: "a", label: "a", ptr: true },
+          ];
+          const P = (L, R) => [
+            { id: "L", row: "a", idx: L, label: "i", color: MINT },
+            { id: "R", row: "a", idx: R, label: "n-1-i", color: CORAL },
+          ];
+          const fr = [];
+          fr.push({
+            cells: mk(range(0, n - 1)),
+            cap: "تكلفة اللون = أكبر عنصر فيه − أصغر عنصر فيه. نريد أكبر مجموع.",
+          });
+          fr.push({
+            cells: mk(asc),
+            cap:
+              "نرتّب أولًا: " +
+              F("1 3 4 5 6") +
+              ". الآن الأصغر على اليسار والأكبر على اليمين.",
+            line: 0,
+          });
+          fr.push({
+            cells: mk(asc, { 0: "g1", 4: "g1" }),
+            ptrs: P(0, 4),
+            cap: "اللون 1 = " + F("{1, 6}") + " ← " + F("6 − 1 = 5"),
+            line: [2, 3],
+            vars: [
+              ["i", 0],
+              ["ans", 5, 1],
+            ],
+          });
+          fr.push({
+            cells: mk(asc, { 0: "g1", 4: "g1", 1: "g2", 3: "g2" }),
+            ptrs: P(1, 3),
+            cap:
+              "اللون 2 = " +
+              F("{3, 5}") +
+              " ← " +
+              F("5 − 3 = 2") +
+              "، والمجموع 7.",
+            line: [2, 3],
+            vars: [
+              ["i", 1],
+              ["ans", 7, 1],
+            ],
+          });
+          fr.push({
+            cells: mk(asc, { 0: "g1", 4: "g1", 1: "g2", 3: "g2", 2: "g3" }),
+            cap:
+              "العنصر الأوسط 4 بلون وحده، تكلفته 0. لهذا تتوقف الحلقة عند " +
+              F("n/2") +
+              ". الجواب " +
+              F("7") +
+              " ✓",
+            vars: [["ans", 7, 1]],
+          });
+          return { rows, frames: fr, code };
+        };
+
+        /* 4) binary search on a sorted array */
+        VIZ.bsFind = () => {
+          const a = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91],
+            n = 10;
+          const code = [
+            "int lo = 0, hi = n - 1;",
+            "while (lo <= hi) {",
+            "    int mid = (lo + hi) / 2;",
+            "    if (a[mid] == x) return mid;",
+            "    if (a[mid] < x) lo = mid + 1;",
+            "    else hi = mid - 1;",
+            "}",
+            "return -1;   // not found",
+          ];
+          const rows = [
+            { k: "i", label: "i", idx: true },
+            { k: "a", label: "a", ptr: true, top: true },
+          ];
+          const cells = (lo, hi, mid, found) => ({
+            i: idxRow(n),
+            a: a.map((v, i) => ({
+              v,
+              c:
+                i === found
+                  ? "ok"
+                  : i === mid
+                    ? "hl"
+                    : i < lo || i > hi
+                      ? "dim"
+                      : "",
+            })),
+          });
+          const fr = [];
+          const run = (x, intro) => {
+            let lo = 0,
+              hi = n - 1,
+              steps = 0;
+            fr.push({
+              cells: cells(lo, hi, null, -1),
+              ptrs: LHM("a", lo, hi, null),
+              wins: [{ id: "w", row: "a", l: lo, r: hi }],
+              cap: intro,
+              line: 0,
+              vars: [
+                ["x", x],
+                ["lo", lo],
+                ["hi", hi],
+              ],
+            });
+            while (lo <= hi) {
+              const mid = (lo + hi) >> 1;
+              steps++;
+              const base = {
+                ptrs: LHM("a", lo, hi, mid),
+                wins: [{ id: "w", row: "a", l: lo, r: hi }],
+              };
+              if (a[mid] === x) {
+                fr.push(
+                  Object.assign(base, {
+                    cells: cells(lo, hi, mid, mid),
+                    wins: [{ id: "w", row: "a", l: lo, r: hi, color: "mint" }],
+                    cap:
+                      F("mid = (" + lo + " + " + hi + ") / 2 = " + mid) +
+                      " ← " +
+                      F("a[" + mid + "] = " + a[mid]) +
+                      " = x ✓ وجدناه في " +
+                      steps +
+                      " خطوات، والبحث الخطي يحتاج " +
+                      (mid + 1) +
+                      ".",
+                    line: 3,
+                    vars: [
+                      ["x", x],
+                      ["mid", mid],
+                      ["steps", steps, 1],
+                    ],
+                  }),
+                );
+                return;
+              }
+              if (a[mid] < x) {
+                fr.push(
+                  Object.assign(base, {
+                    cells: cells(lo, hi, mid, -1),
+                    cap:
+                      F("mid = (" + lo + " + " + hi + ") / 2 = " + mid) +
+                      ": " +
+                      F("a[" + mid + "] = " + a[mid] + " < " + x) +
+                      " ← x على اليمين، نحذف النصف الأيسر: " +
+                      F("lo = " + (mid + 1)),
+                    line: 4,
+                    vars: [
+                      ["x", x],
+                      ["mid", mid],
+                      ["steps", steps],
+                    ],
+                  }),
+                );
+                lo = mid + 1;
+              } else {
+                fr.push(
+                  Object.assign(base, {
+                    cells: cells(lo, hi, mid, -1),
+                    cap:
+                      F("mid = (" + lo + " + " + hi + ") / 2 = " + mid) +
+                      ": " +
+                      F("a[" + mid + "] = " + a[mid] + " > " + x) +
+                      " ← x على اليسار، نحذف النصف الأيمن: " +
+                      F("hi = " + (mid - 1)),
+                    line: 5,
+                    vars: [
+                      ["x", x],
+                      ["mid", mid],
+                      ["steps", steps],
+                    ],
+                  }),
+                );
+                hi = mid - 1;
+              }
+            }
+            fr.push({
+              cells: cells(lo, hi, null, -1),
+              ptrs: LHM("a", lo, hi, null),
+              cap:
+                F("lo = " + lo + " > hi = " + hi) +
+                " ← المجال فارغ، إذن " +
+                F("x = " + x) +
+                " غير موجود. لاحظ: " +
+                F("lo = " + lo) +
+                " هو موضع أول عنصر أكبر من " +
+                x +
+                "، وهذا ما تعطيه lower_bound.",
+              line: 7,
+              vars: [
+                ["x", x],
+                ["lo", lo],
+                ["hi", hi],
+                ["steps", steps, 1],
+              ],
+            });
+          };
+          run(
+            23,
+            "نبحث عن " +
+              F("x = 23") +
+              ". في البداية المجال " +
+              F("[lo, hi]") +
+              " هو كل الـ Array.",
+          );
+          run(40, "الآن نبحث عن " + F("x = 40") + "، وهو غير موجود.");
+          return { rows, frames: fr, code };
+        };
+
+        /* 5) lower_bound / upper_bound as "first T" */
+        VIZ.bounds = () => {
+          const a = [1, 2, 2, 2, 5, 7, 7, 9],
+            n = 8;
+          const code = [
+            "int lb = lower_bound(a.begin(), a.end(), x) - a.begin();",
+            "int ub = upper_bound(a.begin(), a.end(), x) - a.begin();",
+            "int cnt = ub - lb;",
+          ];
+          const rows = [
+            { k: "i", label: "i", idx: true },
+            { k: "a", label: "a" },
+            { k: "ge", label: "a ≥ x", ptr: true },
+            { k: "gt", label: "a > x", ptr: true },
+          ];
+          const pred = (f, x, hlI) =>
+            a.map((v, i) =>
+              f(v, x)
+                ? { v: "T", c: i === hlI ? "ok" : "okg" }
+                : { v: "F", c: "badg" },
+            );
+          const A = (cls) => a.map((v, i) => ({ v, c: (cls && cls[i]) || "" }));
+          const ge = (v, x) => v >= x,
+            gt = (v, x) => v > x;
+          const fr = [];
+          fr.push({
+            cells: { i: idxRow(n), a: A(), ge: null, gt: null },
+            cap:
+              "Array مرتبة و " + F("x = 2") + ". أين تبدأ قيم 2؟ وأين تنتهي؟",
+            vars: [["x", 2]],
+          });
+          fr.push({
+            cells: { i: idxRow(n), a: A(), ge: pred(ge, 2, -1), gt: null },
+            cap:
+              "الشرط " +
+              F("a[i] ≥ 2") +
+              " شكله دائمًا " +
+              F("F … F T … T") +
+              " لأن الـ Array مرتبة. نبحث عن أول T.",
+            vars: [["x", 2]],
+          });
+          fr.push({
+            cells: {
+              i: idxRow(n),
+              a: A({ 1: "hl" }),
+              ge: pred(ge, 2, 1),
+              gt: null,
+            },
+            ptrs: [{ id: "lb", row: "ge", idx: 1, label: "lb", color: MINT }],
+            cap:
+              F("lower_bound") +
+              " = أول موضع فيه " +
+              F("a[i] ≥ x") +
+              " ← " +
+              F("lb = 1"),
+            line: 0,
+            vars: [
+              ["x", 2],
+              ["lb", 1, 1],
+            ],
+          });
+          fr.push({
+            cells: {
+              i: idxRow(n),
+              a: A(),
+              ge: pred(ge, 2, 1),
+              gt: pred(gt, 2, -1),
+            },
+            ptrs: [{ id: "lb", row: "ge", idx: 1, label: "lb", color: MINT }],
+            cap:
+              "الشرط " + F("a[i] > 2") + " له نفس الشكل، وأول T فيه بالموضع 4.",
+            vars: [
+              ["x", 2],
+              ["lb", 1],
+            ],
+          });
+          fr.push({
+            cells: {
+              i: idxRow(n),
+              a: A({ 4: "hl" }),
+              ge: pred(ge, 2, 1),
+              gt: pred(gt, 2, 4),
+            },
+            ptrs: [
+              { id: "lb", row: "ge", idx: 1, label: "lb", color: MINT },
+              { id: "ub", row: "gt", idx: 4, label: "ub", color: CORAL },
+            ],
+            cap:
+              F("upper_bound") +
+              " = أول موضع فيه " +
+              F("a[i] > x") +
+              " ← " +
+              F("ub = 4"),
+            line: 1,
+            vars: [
+              ["x", 2],
+              ["lb", 1],
+              ["ub", 4, 1],
+            ],
+          });
+          fr.push({
+            cells: {
+              i: idxRow(n),
+              a: A({ 1: "ok", 2: "ok", 3: "ok" }),
+              ge: pred(ge, 2, 1),
+              gt: pred(gt, 2, 4),
+            },
+            wins: [{ id: "w", row: "a", l: 1, r: 3, color: "mint" }],
+            ptrs: [
+              { id: "lb", row: "ge", idx: 1, label: "lb", color: MINT },
+              { id: "ub", row: "gt", idx: 4, label: "ub", color: CORAL },
+            ],
+            cap: "عدد مرات ظهور 2 = " + F("ub − lb = 4 − 1 = 3"),
+            line: 2,
+            vars: [
+              ["lb", 1],
+              ["ub", 4],
+              ["cnt", 3, 1],
+            ],
+          });
+          fr.push({
+            cells: {
+              i: idxRow(n),
+              a: A({ 4: "hl" }),
+              ge: pred(ge, 4, 4),
+              gt: pred(gt, 4, 4),
+            },
+            ptrs: [
+              { id: "lb", row: "ge", idx: 4, label: "lb", color: MINT },
+              { id: "ub", row: "gt", idx: 4, label: "ub", color: CORAL },
+            ],
+            cap:
+              "إذا كانت x غير موجودة، مثلًا " +
+              F("x = 4") +
+              ": " +
+              F("lb = ub = 4") +
+              " والعدد 0. وإذا كانت كل القيم أصغر من x ترجع الدالتان الموضع n.",
+            line: [0, 1, 2],
+            vars: [
+              ["x", 4],
+              ["lb", 4],
+              ["ub", 4],
+              ["cnt", 0, 1],
+            ],
+          });
+          return { rows, frames: fr, code };
+        };
+
+        /* 6) 978C Letters: first pre[f] >= b */
+        VIZ.letters = () => {
+          const a = [null, 10, 15, 12],
+            pre = [0, 10, 25, 37],
+            n = 3;
+          const code = [
+            "int lo = 1, hi = n, f = n;",
+            "while (lo <= hi) {",
+            "    int mid = (lo + hi) / 2;",
+            "    if (pre[mid] >= b) { f = mid; hi = mid - 1; }",
+            "    else lo = mid + 1;",
+            "}",
+            'cout << f << " " << b - pre[f - 1] << "\\n";',
+          ];
+          const rows = [
+            { k: "i", label: "i", idx: true },
+            { k: "a", label: "a" },
+            { k: "pre", label: "pre", ptr: true, top: true },
+          ];
+          const base = (cls) => ({
+            i: idxRow(4),
+            a: a.map((v, x) => (x === 0 ? { v: "—", c: "dim" } : { v })),
+            pre: pre.map((v, x) => ({
+              v,
+              c: (cls && cls[x]) || (x === 0 ? "dim" : ""),
+            })),
+          });
+          const fr = [];
+          const run = (b) => {
+            let lo = 1,
+              hi = n,
+              f = n;
+            const marks = {};
+            fr.push({
+              cells: base(),
+              ptrs: LHM("pre", lo, hi, null),
+              wins: [{ id: "w", row: "pre", l: lo, r: hi }],
+              cap:
+                "رسالة " +
+                F("b = " + b) +
+                ": نبحث عن أول سكن " +
+                F("f") +
+                " بحيث " +
+                F("pre[f] ≥ " + b) +
+                ".",
+              line: 0,
+              vars: [
+                ["b", b],
+                ["lo", lo],
+                ["hi", hi],
+              ],
+            });
+            while (lo <= hi) {
+              const mid = (lo + hi) >> 1;
+              if (pre[mid] >= b) {
+                marks[mid] = "ok";
+                fr.push({
+                  cells: base(Object.assign({}, marks)),
+                  ptrs: LHM("pre", lo, hi, mid),
+                  wins: [{ id: "w", row: "pre", l: lo, r: hi }],
+                  cap:
+                    F("pre[" + mid + "] = " + pre[mid] + " ≥ " + b) +
+                    " ✓ ← السكن " +
+                    mid +
+                    " مرشّح (" +
+                    F("f = " + mid) +
+                    ")، ونكمل يسارًا بحثًا عن سكن أبكر: " +
+                    F("hi = " + (mid - 1)),
+                  line: 3,
+                  vars: [
+                    ["b", b],
+                    ["mid", mid],
+                    ["f", mid, 1],
+                  ],
+                });
+                f = mid;
+                hi = mid - 1;
+              } else {
+                marks[mid] = "bad";
+                fr.push({
+                  cells: base(Object.assign({}, marks)),
+                  ptrs: LHM("pre", lo, hi, mid),
+                  wins: [{ id: "w", row: "pre", l: lo, r: hi }],
+                  cap:
+                    F("pre[" + mid + "] = " + pre[mid] + " < " + b) +
+                    " ✗ ← الغرفة " +
+                    b +
+                    " بعد السكن " +
+                    mid +
+                    ": " +
+                    F("lo = " + (mid + 1)),
+                  line: 4,
+                  vars: [
+                    ["b", b],
+                    ["mid", mid],
+                    ["f", f],
+                  ],
+                });
+                lo = mid + 1;
+              }
+            }
+            const cl = {};
+            cl[f] = "ok";
+            cl[f - 1] = "src";
+            fr.push({
+              cells: base(cl),
+              ptrs: LHM("pre", lo, hi, null),
+              cap:
+                F("lo > hi") +
+                " ← انتهى البحث: " +
+                F("f = " + f) +
+                "، والغرفة " +
+                F(
+                  "b − pre[" +
+                    (f - 1) +
+                    "] = " +
+                    b +
+                    " − " +
+                    pre[f - 1] +
+                    " = " +
+                    (b - pre[f - 1]),
+                ) +
+                ". الناتج " +
+                F(f + " " + (b - pre[f - 1])) +
+                " ✓",
+              line: 6,
+              vars: [
+                ["f", f, 1],
+                ["room", b - pre[f - 1], 1],
+              ],
+            });
+          };
+          run(23);
+          run(26);
+          fr.push({
+            cells: base(),
+            cap:
+              "كل رسائل المثال: " +
+              F("1→(1,1) 9→(1,9) 12→(2,2) 23→(2,13) 26→(3,1) 37→(3,12)") +
+              " ✓",
+          });
+          return { rows, frames: fr, code };
+        };
+
+        /* 7) 2008C binary search on the answer k */
+        VIZ.goodArray = () => {
+          const l = 10,
+            r = 20,
+            N = 10;
+          const code = [
+            "long long lo = 1, hi = 100000, ans = 1;",
+            "while (lo <= hi) {",
+            "    long long mid = (lo + hi) / 2;",
+            "    if (l + mid * (mid - 1) / 2 <= r) {",
+            "        ans = mid; lo = mid + 1;",
+            "    } else hi = mid - 1;",
+            "}",
+          ];
+          const rows = [
+            { k: "k", label: "k", ptr: true, top: true },
+            { k: "last", label: "last" },
+            { k: "ok", label: "check" },
+          ];
+          const last = Array(N).fill(null),
+            chk = Array(N).fill("?");
+          const C = {
+            "?": { v: "?", c: "q" },
+            T: { v: "T", c: "ok" },
+            F: { v: "F", c: "bad" },
+            t: { v: "T", c: "okg" },
+            f: { v: "F", c: "badg" },
+          };
+          const snap = (lo, hi, mid, fin) => ({
+            k: range(1, N).map((v) => ({
+              v,
+              c: fin
+                ? v === fin
+                  ? "ok"
+                  : ""
+                : v === mid
+                  ? "hl"
+                  : v < lo || v > hi
+                    ? "dim"
+                    : "",
+            })),
+            last: last.map((v) => (v == null ? { v: "", c: "empty" } : { v })),
+            ok: chk.map((s) => Object.assign({}, C[s])),
+          });
+          const map = (v) => v - 1;
+          const fr = [];
+          let lo = 1,
+            hi = N,
+            ans = 1;
+          fr.push({
+            cells: snap(lo, hi, null),
+            ptrs: LHM("k", lo, hi, null, map),
+            wins: [{ id: "w", row: "k", l: 0, r: N - 1 }],
+            cap:
+              F("check(k)") +
+              ": هل " +
+              F("l + k(k−1)/2 ≤ r") +
+              "؟ هنا " +
+              F("l = 10, r = 20") +
+              ". نعرض k من 1 إلى 10 للتوضيح (في الكود " +
+              F("hi = 10⁵") +
+              ").",
+            line: 0,
+            vars: [
+              ["lo", lo],
+              ["hi", hi],
+              ["ans", ans],
+            ],
+          });
+          while (lo <= hi) {
+            const mid = (lo + hi) >> 1,
+              val = l + (mid * (mid - 1)) / 2;
+            last[mid - 1] = val;
+            const w = [{ id: "w", row: "k", l: lo - 1, r: hi - 1 }];
+            if (val <= r) {
+              chk[mid - 1] = "T";
+              for (let j = 0; j < mid - 1; j++)
+                if (chk[j] === "?") chk[j] = "t";
+              fr.push({
+                cells: snap(lo, hi, mid),
+                ptrs: LHM("k", lo, hi, mid, map),
+                wins: w,
+                cap:
+                  F("mid = " + mid) +
+                  ": " +
+                  F("10 + " + (mid * (mid - 1)) / 2 + " = " + val + " ≤ 20") +
+                  " ✓ ← وكل k أصغر ينجح أيضًا. " +
+                  F("ans = " + mid) +
+                  " ونجرّب أكبر: " +
+                  F("lo = " + (mid + 1)),
+                line: [3, 4],
+                vars: [
+                  ["mid", mid],
+                  ["ans", mid, 1],
+                ],
+              });
+              ans = mid;
+              lo = mid + 1;
+            } else {
+              chk[mid - 1] = "F";
+              for (let j = mid; j < N; j++) if (chk[j] === "?") chk[j] = "f";
+              fr.push({
+                cells: snap(lo, hi, mid),
+                ptrs: LHM("k", lo, hi, mid, map),
+                wins: w,
+                cap:
+                  F("mid = " + mid) +
+                  ": " +
+                  F("10 + " + (mid * (mid - 1)) / 2 + " = " + val + " > 20") +
+                  " ✗ ← وكل k أكبر يفشل أيضًا: " +
+                  F("hi = " + (mid - 1)),
+                line: 5,
+                vars: [
+                  ["mid", mid],
+                  ["ans", ans],
+                ],
+              });
+              hi = mid - 1;
+            }
+          }
+          fr.push({
+            cells: snap(lo, hi, null, ans),
+            ptrs: LHM("k", lo, hi, null, map),
+            cap:
+              F("lo = " + lo + " > hi = " + hi) +
+              " ← " +
+              F("ans = " + ans) +
+              " ✓ بثلاثة فحوصات فقط بدل عشرة. الـ Array نفسها: " +
+              F("10, 11, 13, 16, 20"),
+            vars: [["ans", ans, 1]],
+          });
+          return { rows, frames: fr, code };
+        };
+
+        /* ---------- visualizer engine ---------- */
+        class Viz {
+          constructor(el, spec) {
+            this.el = el;
+            this.spec = spec;
+            this.k = 0;
+            this.timer = null;
+            this.snapping = false;
+            const stage = document.createElement("div");
+            stage.className = "viz-stage";
+            this.stage = stage;
+            const inner = document.createElement("div");
+            inner.className = "viz-inner";
+            stage.appendChild(inner);
+            this.R = {};
+            spec.rows.forEach((r) => {
+              const row = document.createElement("div");
+              row.className =
+                "vrow" +
+                (r.idx ? " idx" : "") +
+                (r.ptr ? " has-ptr" : "") +
+                (r.top ? " has-top" : "");
+              const lab = document.createElement("div");
+              lab.className = "vlabel";
+              lab.textContent = r.label;
+              const cells = document.createElement("div");
+              cells.className = "vcells";
+              row.append(lab, cells);
+              inner.appendChild(row);
+              let n = 0;
+              const ids = [],
+                seen = new Set();
+              spec.frames.forEach((f) => {
+                const d = f.cells[r.k];
+                if (!d) return;
+                n = Math.max(n, d.length);
+                d.forEach((c, i) => {
+                  const id = c.id != null ? c.id : "#" + i;
+                  if (!seen.has(id)) {
+                    seen.add(id);
+                    ids.push(id);
+                  }
+                });
+              });
+              const els = {};
+              ids.forEach((id) => {
+                const c = document.createElement("div");
+                c.className = "cell";
+                c.dataset.v = "\u0001";
+                cells.appendChild(c);
+                els[id] = c;
+              });
+              this.R[r.k] = {
+                row,
+                cells,
+                els,
+                n,
+                wins: {},
+                ptrs: {},
+                idx: !!r.idx,
+              };
+            });
+            const info = document.createElement("div");
+            info.className = "viz-info";
+            info.innerHTML =
+              '<div class="viz-cap"></div><div class="viz-vars"></div><div class="viz-ctrl"><span class="viz-step"></span><button type="button" data-a="first" aria-label="البداية">⏮</button><button type="button" data-a="prev" aria-label="الخطوة السابقة">◀</button><button type="button" data-a="play" class="play">▶ Play</button><button type="button" data-a="next" aria-label="الخطوة التالية">▶</button><button type="button" data-a="last" aria-label="النهاية">⏭</button></div>';
+            const code = document.createElement("div");
+            code.className = "codepanel";
+            code.innerHTML = spec.code
+              .map(
+                (l, i) =>
+                  '<div class="cl"><span class="ln">' +
+                  (i + 1) +
+                  "</span><span>" +
+                  hl(l) +
+                  "</span></div>",
+              )
+              .join("");
+            el.append(stage, info, code);
+            this.cap = info.querySelector(".viz-cap");
+            this.vars = info.querySelector(".viz-vars");
+            this.stepEl = info.querySelector(".viz-step");
+            this.playBtn = info.querySelector(".play");
+            this.codeLines = [...code.querySelectorAll(".cl")];
+            info.querySelector(".viz-ctrl").addEventListener("click", (e) => {
+              e.stopPropagation();
+              const b = e.target.closest("button");
+              if (!b) return;
+              const a = b.dataset.a;
+              if (a !== "play") this.stop();
+              if (a === "first") this.go(0);
+              else if (a === "last") this.go(this.last());
+              else if (a === "prev") this.go(this.k - 1);
+              else if (a === "next") this.go(this.k + 1);
+              else if (a === "play") this.toggle();
+            });
+          }
+          last() {
+            return this.spec.frames.length - 1;
+          }
+          go(k) {
+            this.k = Math.max(0, Math.min(this.last(), k));
+            this.render();
+          }
+          snapTo(k) {
+            this.k = Math.max(0, Math.min(this.last(), k));
+            this.el.classList.add("snap");
+            this.snapping = true;
+            this.render();
+            void this.el.offsetWidth;
+            this.snapping = false;
+            this.el.classList.remove("snap");
+          }
+          toggle() {
+            if (this.timer) {
+              this.stop();
+              return;
+            }
+            if (this.k >= this.last()) this.go(0);
+            this.playBtn.classList.add("on");
+            this.playBtn.textContent = "❚❚ Pause";
+            this.timer = setInterval(() => {
+              if (this.k >= this.last()) {
+                this.stop();
+                return;
+              }
+              this.go(this.k + 1);
+            }, 1600);
+          }
+          stop() {
+            if (this.timer) {
+              clearInterval(this.timer);
+              this.timer = null;
+            }
+            this.playBtn.classList.remove("on");
+            this.playBtn.textContent = "▶ Play";
+          }
+          geom() {
+            for (const key in this.R) {
+              const R = this.R[key];
+              if (R.idx) continue;
+              const c = Object.values(R.els)[0];
+              if (c && c.offsetWidth) {
+                const W = c.offsetWidth,
+                  G = Math.max(5, Math.round(W * 0.16));
+                return { W, G, P: W + G };
+              }
+            }
+            return { W: 50, G: 8, P: 58 };
+          }
+          render() {
+            const f = this.spec.frames[this.k],
+              g = this.geom();
+            for (const r of this.spec.rows) {
+              const R = this.R[r.k],
+                data = f.cells[r.k];
+              R.cells.style.width = R.n * g.P - g.G + "px";
+              R.row.classList.toggle("off", data == null);
+              const seen = new Set();
+              (data || []).forEach((d, i) => {
+                const id = d.id != null ? d.id : "#" + i;
+                seen.add(id);
+                const c = R.els[id];
+                if (!c) return;
+                const v = String(d.v == null ? "" : d.v),
+                  cls = "cell " + (d.c || "");
+                if (c.dataset.v !== v) {
+                  c.dataset.v = v;
+                  c.textContent = v;
+                  c.className = cls;
+                  if (v !== "" && !R.idx && !this.snapping) {
+                    void c.offsetWidth;
+                    c.classList.add("pop");
+                  }
+                } else {
+                  const pop = c.classList.contains("pop");
+                  c.className = cls + (pop ? " pop" : "");
+                }
+                c.style.translate = i * g.P + "px 0";
+                c.style.opacity = "";
+              });
+              Object.keys(R.els).forEach((id) => {
+                if (!seen.has(id)) R.els[id].style.opacity = "0";
+              });
+              const wins = (f.wins || []).filter((w) => w.row === r.k),
+                seenW = new Set();
+              wins.forEach((w) => {
+                seenW.add(w.id);
+                let el = R.wins[w.id];
+                if (!el) {
+                  el = document.createElement("div");
+                  el.className = "vwin";
+                  el.style.opacity = "0";
+                  R.cells.appendChild(el);
+                  R.wins[w.id] = el;
+                  el.style.left = w.l * g.P - 6 + "px";
+                  el.style.width = (w.r - w.l) * g.P + g.W + 12 + "px";
+                  void el.offsetWidth;
+                }
+                el.className = "vwin " + (w.color || "");
+                el.style.left = w.l * g.P - 6 + "px";
+                el.style.width = (w.r - w.l) * g.P + g.W + 12 + "px";
+                el.style.opacity = "1";
+              });
+              Object.keys(R.wins).forEach((id) => {
+                if (!seenW.has(id)) R.wins[id].style.opacity = "0";
+              });
+              const ps = (f.ptrs || []).filter((p) => p.row === r.k),
+                seenP = new Set();
+              ps.forEach((p) => {
+                seenP.add(p.id);
+                let el = R.ptrs[p.id];
+                if (!el) {
+                  el = document.createElement("div");
+                  el.className = "vptr";
+                  el.innerHTML = "<span></span>";
+                  el.style.opacity = "0";
+                  R.cells.appendChild(el);
+                  R.ptrs[p.id] = el;
+                  el.style.left = p.idx * g.P + g.W / 2 + "px";
+                  void el.offsetWidth;
+                }
+                el.classList.toggle("top", !!p.top);
+                el.style.setProperty("--c", p.color || AMBER);
+                el.querySelector("span").textContent = p.label;
+                el.style.left = p.idx * g.P + g.W / 2 + "px";
+                el.style.opacity = "1";
+              });
+              Object.keys(R.ptrs).forEach((id) => {
+                if (!seenP.has(id)) R.ptrs[id].style.opacity = "0";
+              });
+            }
+            const st = this.stage;
+            if (st.scrollWidth > st.clientWidth + 2) {
+              let fx = null;
+              const lw =
+                (this.el.querySelector(".vlabel") || { offsetWidth: 60 })
+                  .offsetWidth +
+                12 +
+                18;
+              const fp = (f.ptrs || []).find((p) => p.top) || (f.ptrs || [])[0];
+              if (fp) fx = lw + fp.idx * g.P + g.W / 2;
+              else if (f.wins && f.wins.length)
+                fx = lw + ((f.wins[0].l + f.wins[0].r) / 2) * g.P + g.W / 2;
+              if (fx != null)
+                st.scrollTo({
+                  left: Math.max(0, fx - st.clientWidth / 2),
+                  behavior: this.snapping ? "auto" : "smooth",
+                });
+            }
+            this.cap.innerHTML = f.cap || "";
+            this.vars.innerHTML = (f.vars || [])
+              .map(
+                (x) =>
+                  '<div class="var' +
+                  (x[2] ? " flash" : "") +
+                  '">' +
+                  x[0] +
+                  " =<b>" +
+                  x[1] +
+                  "</b></div>",
+              )
+              .join("");
+            const lines = f.line == null ? [] : [].concat(f.line);
+            this.codeLines.forEach((c, i) =>
+              c.classList.toggle("on", lines.indexOf(i) >= 0),
+            );
+            this.stepEl.textContent =
+              "step " + (this.k + 1) + " / " + this.spec.frames.length;
+          }
+        }
+        const vizMap = new Map();
+        document.querySelectorAll("[data-viz]").forEach((el) => {
+          vizMap.set(el, new Viz(el, VIZ[el.dataset.viz]()));
+        });
+
+        /* ---------- guess-the-number ---------- */
+        (function () {
+          const root = document.getElementById("guess");
+          if (!root) return;
+          const num = document.getElementById("gNum"),
+            meta = document.getElementById("gMeta"),
+            rng = document.getElementById("gRange"),
+            mark = document.getElementById("gMark"),
+            hist = document.getElementById("gHist"),
+            msg = document.getElementById("gMsg");
+          let lo, hi, g, tries, done, log;
+          function draw() {
+            num.textContent = lo <= hi ? String(g) : "?";
+            meta.innerHTML =
+              "المحاولة <b>" +
+              tries +
+              "</b> · المجال " +
+              F("[" + lo + ", " + hi + "]");
+            rng.style.left = ((lo - 1) / 100) * 100 + "%";
+            rng.style.width = (Math.max(0, hi - lo + 1) / 100) * 100 + "%";
+            mark.style.left = ((g - 0.5) / 100) * 100 + "%";
+            hist.innerHTML = log
+              .map((x) => '<span class="' + x.c + '">' + x.t + "</span>")
+              .join("");
+          }
+          function reset() {
+            lo = 1;
+            hi = 100;
+            tries = 1;
+            done = false;
+            log = [];
+            g = (lo + hi) >> 1;
+            msg.textContent = "";
+            draw();
+          }
+          root.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const b = e.target.closest("button[data-g]");
+            if (!b) return;
+            const a = b.dataset.g;
+            if (a === "reset") {
+              reset();
+              return;
+            }
+            if (done) return;
+            if (a === "ok") {
+              done = true;
+              log.push({ t: g + " ✓", c: "ok" });
+              msg.textContent =
+                tries === 1
+                  ? "عرفته من أول محاولة!"
+                  : tries === 2
+                    ? "عرفته في محاولتين."
+                    : "عرفته في " + tries + " محاولات.";
+              draw();
+              return;
+            }
+            if (a === "up") {
+              log.push({ t: g + " ↑", c: "" });
+              lo = g + 1;
+            }
+            if (a === "down") {
+              log.push({ t: g + " ↓", c: "" });
+              hi = g - 1;
+            }
+            if (lo > hi) {
+              done = true;
+              msg.textContent =
+                "الإجابات متناقضة: لا يوجد رقم يحققها. اضغط «من جديد».";
+              draw();
+              return;
+            }
+            tries++;
+            g = (lo + hi) >> 1;
+            draw();
+          });
+          reset();
+        })();
+
+        /* ---------- deck ---------- */
+        const slides = [...document.querySelectorAll(".slide")];
+        const counter = document.getElementById("counter"),
+          progress = document.getElementById("progress"),
+          studyBtn = document.getElementById("study");
+        const secBtns = [...document.querySelectorAll("#sections button")];
+        const REVEAL =
+          ".grid2 > *, .grid3:not(.quiz) > *, .grid4 > *, .steps > *, .roadmap > *, .hw > *, .flow > .node, .reveal-only, .quiz-ans, .content > .callout";
+        let cur = 0,
+          rc = 0,
+          study = false;
+        try {
+          study = localStorage.getItem("ps-w8-study") === "1";
+        } catch (e) {}
+        studyBtn.setAttribute("aria-pressed", study ? "true" : "false");
+        const items = (s) => [...s.querySelectorAll(REVEAL)];
+        const vizOf = (s) => {
+          const el = s.querySelector("[data-viz]");
+          return el ? vizMap.get(el) : null;
+        };
+        function applyReveal(s, n) {
+          items(s).forEach((el, i) => {
+            el.classList.add("reveal-item");
+            el.classList.toggle("revealed", i < n);
+          });
+        }
+        function fit(s) {
+          const c = s.querySelector(".content");
+          if (!c) return;
+          c.style.zoom = "1";
+          const cs = getComputedStyle(s);
+          const avail =
+            s.clientHeight -
+            parseFloat(cs.paddingTop) -
+            parseFloat(cs.paddingBottom);
+          const h = c.scrollHeight + (s.querySelector("[data-viz]") ? 34 : 0);
+          if (h > avail && window.innerWidth > 700)
+            c.style.zoom = Math.max(0.6, (avail / h) * 0.98).toFixed(3);
+        }
+        function heroFit() {
+          const hv = document.querySelector(".hv");
+          if (!hv) return;
+          const box = hv.parentElement;
+          hv.style.zoom = "1";
+          const w = box.clientWidth - 48;
+          if (w > 0)
+            hv.style.zoom = String(Math.min(1, Math.max(0.5, w / 512)));
+        }
+        function render() {
+          slides.forEach((s, i) => s.classList.toggle("active", i === cur));
+          counter.textContent =
+            String(cur + 1).padStart(2, "0") +
+            " / " +
+            String(slides.length).padStart(2, "0");
+          progress.style.width = ((cur + 1) / slides.length) * 100 + "%";
+          const sec = +slides[cur].dataset.sec;
+          secBtns.forEach((b, i) => {
+            b.classList.toggle("on", i === sec);
+            b.classList.toggle("done", i < sec);
+          });
+        }
+        function goTo(i, dir) {
+          vizMap.forEach((v) => v.stop());
+          cur = Math.max(0, Math.min(slides.length - 1, i));
+          render();
+          const s = slides[cur];
+          if (cur === 0) heroFit();
+          fit(s);
+          const v = vizOf(s);
+          rc = study || dir === -1 ? items(s).length : 0;
+          applyReveal(s, rc);
+          if (v) v.snapTo(dir === -1 ? v.last() : 0);
+        }
+        function next() {
+          const s = slides[cur],
+            v = vizOf(s);
+          if (v) {
+            v.stop();
+            if (v.k < v.last()) {
+              v.go(v.k + 1);
+              return;
+            }
+          }
+          if (rc < items(s).length) {
+            rc++;
+            applyReveal(s, rc);
+            return;
+          }
+          if (cur < slides.length - 1) goTo(cur + 1, 1);
+        }
+        function prev() {
+          const s = slides[cur],
+            v = vizOf(s);
+          if (rc > 0 && !study) {
+            rc--;
+            applyReveal(s, rc);
+            return;
+          }
+          if (v) {
+            v.stop();
+            if (v.k > 0) {
+              v.go(v.k - 1);
+              return;
+            }
+          }
+          if (cur > 0) goTo(cur - 1, -1);
+        }
+        function fullscreen() {
+          try {
+            if (!document.fullscreenElement) {
+              const p =
+                document.documentElement.requestFullscreen &&
+                document.documentElement.requestFullscreen();
+              if (p && p.catch) p.catch(() => {});
+            } else {
+              const p = document.exitFullscreen && document.exitFullscreen();
+              if (p && p.catch) p.catch(() => {});
+            }
+          } catch (e) {}
+        }
+        document.getElementById("next").addEventListener("click", (e) => {
+          e.stopPropagation();
+          next();
+        });
+        document.getElementById("prev").addEventListener("click", (e) => {
+          e.stopPropagation();
+          prev();
+        });
+        document.getElementById("fs").addEventListener("click", (e) => {
+          e.stopPropagation();
+          fullscreen();
+        });
+        studyBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          study = !study;
+          studyBtn.setAttribute("aria-pressed", study ? "true" : "false");
+          try {
+            localStorage.setItem("ps-w8-study", study ? "1" : "0");
+          } catch (err) {}
+          if (study) {
+            const s = slides[cur];
+            rc = items(s).length;
+            applyReveal(s, rc);
+          }
+        });
+        secBtns.forEach((b) =>
+          b.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const i = slides.findIndex((s) => s.dataset.sec === b.dataset.sec);
+            if (i >= 0) goTo(i, 1);
+          }),
+        );
+        document
+          .querySelector(".footer")
+          .addEventListener("click", (e) => e.stopPropagation());
+        document.getElementById("deck").addEventListener("click", (e) => {
+          if (e.target.closest("a,button,.viz-ctrl,.guess,input")) return;
+          next();
+        });
+        document.addEventListener("keydown", (e) => {
+          const k = e.key,
+            onCtl =
+              e.target &&
+              e.target.closest &&
+              e.target.closest("button,a,input");
+          if (onCtl && (k === " " || k === "Enter")) return;
+          if (
+            ["ArrowRight", "ArrowLeft", " ", "PageDown", "PageUp"].indexOf(k) >=
+            0
+          )
+            e.preventDefault();
+          if (k === "ArrowRight" || k === "PageDown" || k === " ") next();
+          else if (k === "ArrowLeft" || k === "PageUp") prev();
+          else if (k === "p" || k === "P") {
+            const v = vizOf(slides[cur]);
+            if (v) v.toggle();
+          } else if (k === "f" || k === "F") fullscreen();
+          else if (k === "Home") goTo(0, 1);
+          else if (k === "End") goTo(slides.length - 1, -1);
+        });
+        let sx = 0,
+          sy = 0;
+        document.addEventListener(
+          "touchstart",
+          (e) => {
+            sx = e.changedTouches[0].clientX;
+            sy = e.changedTouches[0].clientY;
+          },
+          { passive: true },
+        );
+        document.addEventListener(
+          "touchend",
+          (e) => {
+            const dx = e.changedTouches[0].clientX - sx,
+              dy = e.changedTouches[0].clientY - sy;
+            if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+              if (
+                e.target.closest &&
+                e.target.closest(".viz-stage,.tbl-wrap,pre")
+              )
+                return;
+              dx < 0 ? next() : prev();
+            }
+          },
+          { passive: true },
+        );
+        window.addEventListener("resize", () => {
+          const s = slides[cur];
+          heroFit();
+          fit(s);
+          const v = vizOf(s);
+          if (v) v.snapTo(v.k);
+        });
+        if (document.fonts && document.fonts.ready)
+          document.fonts.ready.then(() => {
+            const s = slides[cur];
+            fit(s);
+            const v = vizOf(s);
+            if (v) v.snapTo(v.k);
+          });
+        goTo(0, 1);
+      })();
+    </script>
+  </body>
+</html>
